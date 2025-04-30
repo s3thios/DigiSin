@@ -14,7 +14,7 @@ import { generateBoleto } from '@/services/boleto';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy } from 'lucide-react';
+import { Copy, Clock, Music } from 'lucide-react'; // Added Music icon
 
 type PaymentMethod = 'pix' | 'boleto';
 
@@ -26,7 +26,8 @@ interface PaymentResult {
 
 export default function ReservationsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
+  // Time selection removed as it's full day now
+  // const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | undefined>(undefined);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -38,16 +39,18 @@ export default function ReservationsPage() {
 
   const { toast } = useToast();
 
+  // TODO: Fetch fee from admin settings
   const partyHallFee = 150;
 
-  const availableTimes = Array.from({ length: 15 }, (_, i) => {
-    const hour = 8 + i;
-    return `${hour.toString().padStart(2, '0')}:00`;
-  });
+  // Available times removed as it's full day
+  // const availableTimes = Array.from({ length: 15 }, (_, i) => {
+  //   const hour = 8 + i;
+  //   return `${hour.toString().padStart(2, '0')}:00`;
+  // });
 
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-    setSelectedTime(undefined); // Reset time when date changes
+    // setSelectedTime(undefined); // No longer needed
     setPaymentResult(null); // Reset payment result
   };
 
@@ -90,8 +93,9 @@ export default function ReservationsPage() {
       toast({ title: "Erro", description: "Selecione uma foto para enviar.", variant: "destructive" });
       return;
     }
-    // TODO: Implement actual upload logic
+    // TODO: Implement actual upload logic and notification
     console.log("Uploading proof photo:", proofPhoto.name);
+     // TODO: Notify admin (push/email)
      toast({ title: "Sucesso", description: "Foto de comprovante enviada." });
      setProofPhoto(null);
      // Clear the file input if possible (depends on implementation)
@@ -106,8 +110,9 @@ export default function ReservationsPage() {
         toast({ title: "Erro", description: "Descreva o dano encontrado.", variant: "destructive" });
         return;
      }
-    // TODO: Implement actual damage report logic (upload photo + description)
+    // TODO: Implement actual damage report logic (upload photo + description) and notification
     console.log("Reporting damage:", damagePhoto.name, damageDescription);
+     // TODO: Notify admin (push/email)
     toast({ title: "Sucesso", description: "Relato de dano enviado para análise." });
     setDamagePhoto(null);
     setDamageDescription('');
@@ -116,18 +121,22 @@ export default function ReservationsPage() {
 
 
   const handleGeneratePayment = async () => {
-    if (!selectedDate || !selectedTime || !paymentMethod) return;
+    // Time selection removed
+    if (!selectedDate || !paymentMethod) return;
 
     setIsGeneratingPayment(true);
     setPaymentResult(null);
 
     try {
+      const reservationDescription = `Reserva Salão ${format(selectedDate, 'dd/MM/yyyy')} (Dia Inteiro)`;
+
       if (paymentMethod === 'pix') {
         const result = await generatePixCode({
           value: partyHallFee,
-          description: `Reserva Salão ${format(selectedDate, 'dd/MM/yyyy')} ${selectedTime}`,
+          description: reservationDescription,
         });
         setPaymentResult({ code: result.pixCode, expiration: result.expiration });
+         // TODO: Notify resident (push/email) about pending payment
         toast({
           title: "Código PIX Gerado",
           description: "Copie o código e realize o pagamento.",
@@ -137,11 +146,12 @@ export default function ReservationsPage() {
         const payerDetails = { name: "Nome do Residente", cpf: "123.456.789-00" };
         const result = await generateBoleto({
           value: partyHallFee,
-          description: `Reserva Salão ${format(selectedDate, 'dd/MM/yyyy')} ${selectedTime}`,
+          description: reservationDescription,
           payerName: payerDetails.name,
           payerCPF: payerDetails.cpf,
         });
         setPaymentResult({ code: result.barcode, expiration: result.expiration, url: result.url });
+         // TODO: Notify resident (push/email) about pending payment
         toast({
           title: "Boleto Gerado",
           description: "Realize o pagamento do boleto.",
@@ -170,7 +180,7 @@ export default function ReservationsPage() {
   };
 
   // TODO: Implement rescheduling logic and fee calculation
-  // TODO: Implement automatic confirmation after payment (requires webhook or polling)
+  // TODO: Implement automatic confirmation after payment (requires webhook or polling) -> Notify Resident on confirm
 
   return (
     <div className="space-y-6">
@@ -180,7 +190,9 @@ export default function ReservationsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Salão de Festas</CardTitle>
-          <CardDescription>Taxa de reserva: R$ {partyHallFee.toFixed(2)}</CardDescription>
+          <CardDescription>
+            Taxa de reserva: R$ {partyHallFee.toFixed(2)}. Horário: 08:00 - 22:00 (Dia inteiro). Som ambiente permitido.
+          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
           <div className="flex flex-col items-center">
@@ -199,37 +211,27 @@ export default function ReservationsPage() {
              )}
           </div>
           <div className="space-y-4">
-            <Label htmlFor="time-select">Selecione o Horário</Label>
+            {/* Time Select Removed */}
+             {/* <Label htmlFor="time-select">Selecione o Horário</Label>
              <Select
                 value={selectedTime}
                 onValueChange={setSelectedTime}
                 disabled={!selectedDate}
-             >
-                <SelectTrigger id="time-select" className="w-full">
-                 <SelectValue placeholder="Selecione um horário" />
-                </SelectTrigger>
-                <SelectContent>
-                 {availableTimes.map((time) => (
-                    <SelectItem key={time} value={time}>
-                     {time}
-                    </SelectItem>
-                 ))}
-                </SelectContent>
-             </Select>
+             > ... </Select> */}
 
-              {selectedDate && selectedTime && (
+             {selectedDate && (
                 <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                   <AlertDialogTrigger asChild>
-                    <Button className="w-full" disabled={isGeneratingPayment}>
-                      Confirmar Reserva e Gerar Pagamento
+                    <Button className="w-full" disabled={isGeneratingPayment || !selectedDate}>
+                       {selectedDate ? 'Confirmar Reserva e Gerar Pagamento' : 'Selecione uma Data'}
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Confirmar Reserva</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Você confirma a reserva do Salão de Festas para{' '}
-                        {format(selectedDate, 'dd/MM/yyyy')} às {selectedTime}?
+                        Você confirma a reserva do Salão de Festas para o dia inteiro em{' '}
+                        {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : ''}?
                         O valor da taxa é R$ {partyHallFee.toFixed(2)}.
                         Selecione o método de pagamento abaixo.
                       </AlertDialogDescription>
@@ -279,7 +281,7 @@ export default function ReservationsPage() {
                         </Button>
                      )}
                      <p className="mt-2 text-xs text-muted-foreground">
-                        Sua reserva será confirmada automaticamente após a compensação do pagamento.
+                        Sua reserva será confirmada automaticamente após a compensação do pagamento. Você será notificado.
                      </p>
                    </CardContent>
                 </Card>
@@ -287,9 +289,10 @@ export default function ReservationsPage() {
 
           </div>
         </CardContent>
-        <CardFooter className="text-sm text-muted-foreground">
-           Nota: Taxas adicionais podem ser aplicadas em caso de reagendamento.
-           O horário de funcionamento do Salão de Festas é das 8:00 às 22:00.
+        <CardFooter className="text-sm text-muted-foreground flex flex-col items-start gap-1">
+            <div className="flex items-center gap-1"><Clock className="h-3 w-3" /> Horário: 08:00 - 22:00</div>
+            <div className="flex items-center gap-1"><Music className="h-3 w-3" /> Som ambiente permitido.</div>
+            <div>Nota: Taxas adicionais podem ser aplicadas em caso de reagendamento.</div>
         </CardFooter>
       </Card>
 
@@ -334,14 +337,10 @@ export default function ReservationsPage() {
          </CardContent>
       </Card>
 
-      {/* Add calendar view for existing reservations later */}
+      {/* TODO: Add resident's reservation list */}
       {/* <Card>
-        <CardHeader>
-          <CardTitle>Calendário de Reservas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {/* Display Calendar with booked dates highlighted * /}
-        </CardContent>
+        <CardHeader><CardTitle>Minhas Reservas</CardTitle></CardHeader>
+        <CardContent>...</CardContent>
       </Card> */}
     </div>
   );

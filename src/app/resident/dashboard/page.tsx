@@ -3,10 +3,18 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Bell, Calendar, MessageSquareQuote, FileText } from 'lucide-react';
 
+// TODO: Fetch resident-specific dashboard data dynamically
+const residentSummary = {
+    unreadAnnouncements: 3, // Example
+    activeReservations: 1, // Example
+    pendingOccurrences: 0, // Example
+};
+
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-foreground">Bem-vindo(a)!</h1>
+      {/* TODO: Fetch resident's name */}
+      <h1 className="text-3xl font-bold text-foreground">Bem-vindo(a), Maria!</h1>
       <p className="text-muted-foreground">Seu painel de controle do condomínio.</p>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -16,7 +24,7 @@ export default function DashboardPage() {
             <Bell className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3</div>
+            <div className="text-2xl font-bold">{residentSummary.unreadAnnouncements}</div>
             <p className="text-xs text-muted-foreground">
               Avisos não lidos
             </p>
@@ -31,7 +39,7 @@ export default function DashboardPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">1</div>
+            <div className="text-2xl font-bold">{residentSummary.activeReservations}</div>
             <p className="text-xs text-muted-foreground">
               Reserva ativa
             </p>
@@ -42,16 +50,16 @@ export default function DashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reclamações Abertas</CardTitle>
+            <CardTitle className="text-sm font-medium">Ocorrências Abertas</CardTitle>
             <MessageSquareQuote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
+            <div className="text-2xl font-bold">{residentSummary.pendingOccurrences}</div>
             <p className="text-xs text-muted-foreground">
-              Reclamações pendentes
+              Ocorrências pendentes
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                <Link href="/resident/complaints">Registrar reclamação</Link>
+                <Link href="/resident/complaints">Registrar Ocorrência</Link> {/* Updated text */}
             </Button>
           </CardContent>
         </Card>
@@ -87,10 +95,10 @@ export default function DashboardPage() {
                 <Link href="/resident/vehicles">Cadastrar Veículo</Link>
             </Button>
              <Button variant="outline" asChild>
-                <Link href="/resident/complaints">Abrir Reclamação</Link>
+                <Link href="/resident/complaints">Abrir Ocorrência</Link> {/* Updated text */}
             </Button>
              <Button variant="outline" asChild>
-                <Link href="/resident/marketplace">Ver Anúncios</Link>
+                <Link href="/resident/marketplace">Ver Classificados</Link> {/* Updated text */}
             </Button>
              <Button variant="outline" asChild>
                 <Link href="/resident/profile">Meu Perfil</Link>

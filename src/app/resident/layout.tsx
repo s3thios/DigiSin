@@ -13,9 +13,17 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { Home, Calendar, Bell, FileText, Settings, User, LogOut, Building, FileWarning, Utensils, Car, Bike, PawPrint, FileUp, FileImage, MessageSquareQuote, MapPin, Briefcase, Package, Phone } from 'lucide-react';
+import { Home, Calendar, Bell, FileText, Settings, User, LogOut, Building, FileWarning, Utensils, Car, Bike, PawPrint, FileUp, FileImage, MessageSquareQuote, MapPin, Briefcase, Package, Phone, Ticket } from 'lucide-react'; // Added Ticket
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+
+// TODO: Fetch user data dynamically
+const residentUser = {
+    name: "Maria Residente",
+    role: "Residente",
+    avatarSrc: "https://picsum.photos/100/100?random=5",
+    avatarFallback: "MR",
+};
 
 export default function ResidentLayout({
   children,
@@ -27,12 +35,12 @@ export default function ResidentLayout({
        <Sidebar collapsible="icon" variant="sidebar" className="border-r">
         <SidebarHeader className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10">
-              <AvatarImage src="https://picsum.photos/100/100" alt="Foto do Usuário" data-ai-hint="user avatar" />
-              <AvatarFallback>US</AvatarFallback>
+              <AvatarImage src={residentUser.avatarSrc} alt={`Foto de ${residentUser.name}`} data-ai-hint="user avatar resident" />
+              <AvatarFallback>{residentUser.avatarFallback}</AvatarFallback>
           </Avatar>
            <div className="flex flex-col truncate">
-              <span className="font-semibold text-lg text-sidebar-foreground group-data-[collapsible=icon]:hidden">Usuário Exemplo</span>
-              <span className="text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">Residente</span>
+              <span className="font-semibold text-lg text-sidebar-foreground group-data-[collapsible=icon]:hidden">{residentUser.name}</span>
+              <span className="text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">{residentUser.role}</span>
            </div>
         </SidebarHeader>
         <Separator />
@@ -72,9 +80,17 @@ export default function ResidentLayout({
             </SidebarMenuItem>
             <SidebarMenuItem>
               <Link href="/resident/complaints" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Reclamações">
+                <SidebarMenuButton tooltip="Ocorrências">
                   <MessageSquareQuote />
-                  <span>Reclamações</span>
+                  <span>Ocorrências</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <Link href="/resident/tickets" legacyBehavior passHref>
+                <SidebarMenuButton tooltip="Tickets">
+                  <Ticket />
+                  <span>Tickets</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -94,7 +110,7 @@ export default function ResidentLayout({
                   <SidebarMenuItem>
                       <Link href="/resident/visitors" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Visitantes">
-                              <User /> {/* Change icon if better one exists */}
+                              <Users /> {/* Changed icon to Users */}
                               <span>Visitantes</span>
                           </SidebarMenuButton>
                       </Link>
@@ -139,9 +155,9 @@ export default function ResidentLayout({
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                       <Link href="/resident/marketplace" legacyBehavior passHref>
-                          <SidebarMenuButton tooltip="Anunciar">
+                          <SidebarMenuButton tooltip="Classificados">
                               <Briefcase />
-                              <span>Anunciar</span>
+                              <span>Classificados</span> {/* Renamed from Anunciar */}
                           </SidebarMenuButton>
                       </Link>
                   </SidebarMenuItem>
@@ -161,18 +177,20 @@ export default function ResidentLayout({
          <Separator />
         <SidebarFooter className="p-2">
            <SidebarMenu>
-             <SidebarMenuItem>
+             {/* <SidebarMenuItem>
               <SidebarMenuButton tooltip="Configurações">
                 <Settings />
                  <span>Configurações</span>
               </SidebarMenuButton>
-            </SidebarMenuItem>
+            </SidebarMenuItem> */}
             <SidebarMenuItem>
-              {/* Add logout functionality here */}
-              <SidebarMenuButton tooltip="Sair">
-                <LogOut />
-                <span>Sair</span>
-              </SidebarMenuButton>
+              {/* TODO: Add logout functionality here */}
+               <Link href="/login" passHref> {/* Redirect to login on logout */}
+                  <SidebarMenuButton tooltip="Sair">
+                    <LogOut />
+                    <span>Sair</span>
+                  </SidebarMenuButton>
+              </Link>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>

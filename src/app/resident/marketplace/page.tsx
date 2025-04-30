@@ -9,6 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
 import { Briefcase, Package, Trash2, PlusCircle, Phone, MessageCircle } from 'lucide-react'; // Added Phone and MessageCircle for contact
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 
 type AdType = 'product' | 'service' | 'job';
@@ -31,8 +33,8 @@ const initialAds: Ad[] = [
     { id: 3, title: "Babysitter Disponível", description: "Cuido de crianças nos fins de semana. Tenho experiência e referências.", type: "job", contactInfo: "(99) 91122-3344", postedBy: "Juliana", blockApartment: "Bloco B / Apto 202", postDate: new Date(2024, 6, 24) },
 ];
 
-// Assume this is the current user's identifier
-const currentUserIdentifier = { name: "Usuário Exemplo", blockApartment: "Bloco B / Apto 101" };
+// Assume this is the current user's identifier - TODO: Fetch dynamically
+const currentUserIdentifier = { name: "Maria Residente", blockApartment: "Bloco B / Apto 101" };
 
 export default function MarketplacePage() {
   const [ads, setAds] = useState<Ad[]>(initialAds);
@@ -64,7 +66,10 @@ export default function MarketplacePage() {
         postDate: new Date(),
     };
     console.log("Adding ad:", newAd);
-    setAds([newAd, ...ads]); // Add to the beginning of the list
+     // Simulate adding to list and notify
+     setAds([newAd, ...ads]); // Add to the beginning of the list
+     // TODO: Potentially notify other residents (optional, consider frequency)
+
 
     toast({ title: "Sucesso", description: "Anúncio publicado com sucesso." });
     setNewAdTitle('');
@@ -105,14 +110,14 @@ export default function MarketplacePage() {
         switch (type) {
        case 'product': return 'Produto';
        case 'service': return 'Serviço';
-       case 'job': return 'Oportunidade'; // Changed from 'Job' to 'Oportunidade'
+       case 'job': return 'Oportunidade';
        default: return '';
      }
    }
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-foreground">Anúncios da Comunidade</h1>
+      <h1 className="text-3xl font-bold text-foreground">Classificados da Comunidade</h1>
       <p className="text-muted-foreground">Anuncie ou encontre produtos, serviços e oportunidades oferecidos por seus vizinhos.</p>
 
       <Card>
@@ -174,7 +179,7 @@ export default function MarketplacePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Anúncios Ativos</CardTitle>
+          <CardTitle>Classificados Ativos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {ads.length > 0 ? (
@@ -224,7 +229,7 @@ export default function MarketplacePage() {
               </Card>
             ))
           ) : (
-            <p className="text-center text-muted-foreground">Nenhum anúncio publicado no momento.</p>
+            <p className="text-center text-muted-foreground">Nenhum classificado publicado no momento.</p>
           )}
         </CardContent>
       </Card>
@@ -234,5 +239,3 @@ export default function MarketplacePage() {
 
 // Helper for destructive variant in AlertDialogAction if not directly supported
 import { buttonVariants } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';

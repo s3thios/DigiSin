@@ -13,19 +13,20 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, Utensils, MapPin, DollarSign, CalendarCheck, Ticket } from 'lucide-react'; // Added Ticket icon
+import { LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, CalendarCheck, Ticket } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
-// TODO: Fetch user role and name dynamically
-const user = {
-    name: "Admin Geral",
-    role: "Admin", // or "Síndico" based on auth
-    avatarSrc: "https://picsum.photos/100/100?grayscale",
-    avatarFallback: "AD",
+// TODO: Fetch sindico user data dynamically, including managed condos
+const sindicoUser = {
+    name: "Síndico Exemplo",
+    role: "Síndico",
+    avatarSrc: "https://picsum.photos/100/100?grayscale&random=10",
+    avatarFallback: "SI",
+    // managedCondos: ["Plaza das Flores IV"], // Example
 };
 
-export default function AdminLayout({
+export default function SindicoLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -35,35 +36,28 @@ export default function AdminLayout({
        <Sidebar collapsible="icon" variant="sidebar" className="border-r">
         <SidebarHeader className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10">
-              <AvatarImage src={user.avatarSrc} alt={`Foto de ${user.name}`} data-ai-hint="admin user avatar" />
-              <AvatarFallback>{user.avatarFallback}</AvatarFallback>
+              <AvatarImage src={sindicoUser.avatarSrc} alt={`Foto de ${sindicoUser.name}`} data-ai-hint="sindico user avatar" />
+              <AvatarFallback>{sindicoUser.avatarFallback}</AvatarFallback>
           </Avatar>
            <div className="flex flex-col truncate">
-              <span className="font-semibold text-lg text-sidebar-foreground group-data-[collapsible=icon]:hidden">{user.name}</span>
-              <span className="text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">{user.role}</span>
+              <span className="font-semibold text-lg text-sidebar-foreground group-data-[collapsible=icon]:hidden">{sindicoUser.name}</span>
+              <span className="text-sm text-muted-foreground group-data-[collapsible=icon]:hidden">{sindicoUser.role}</span>
            </div>
         </SidebarHeader>
         <Separator />
         <SidebarContent className="flex-1 overflow-y-auto p-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/admin/dashboard" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Visão Geral">
+              <Link href="/sindico/dashboard" legacyBehavior passHref>
+                <SidebarMenuButton tooltip="Painel do Condomínio">
                   <LayoutDashboard />
-                  <span>Visão Geral</span>
+                  <span>Painel</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+            {/* TODO: Conditionally show links based on sindico permissions */}
              <SidebarMenuItem>
-              <Link href="/admin/condominiums" legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Condomínios">
-                  <Building />
-                  <span>Condomínios</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <Link href="/admin/residents" legacyBehavior passHref>
+              <Link href="/sindico/residents" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Moradores">
                   <Users />
                   <span>Moradores</span>
@@ -71,7 +65,7 @@ export default function AdminLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/admin/announcements" legacyBehavior passHref>
+              <Link href="/sindico/announcements" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Avisos">
                   <Bell />
                   <span>Avisos</span>
@@ -79,7 +73,7 @@ export default function AdminLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/admin/regulations" legacyBehavior passHref>
+              <Link href="/sindico/regulations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Regulamento">
                   <FileText />
                   <span>Regulamento</span>
@@ -87,7 +81,7 @@ export default function AdminLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/admin/complaints" legacyBehavior passHref>
+              <Link href="/sindico/complaints" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Ocorrências">
                   <MessageSquareQuote />
                   <span>Ocorrências</span>
@@ -95,7 +89,7 @@ export default function AdminLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/admin/tickets" legacyBehavior passHref>
+              <Link href="/sindico/tickets" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Tickets">
                   <Ticket />
                   <span>Tickets</span>
@@ -103,7 +97,7 @@ export default function AdminLayout({
               </Link>
             </SidebarMenuItem>
               <SidebarMenuItem>
-              <Link href="/admin/reservations" legacyBehavior passHref>
+              <Link href="/sindico/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservas">
                   <CalendarCheck />
                   <span>Reservas</span>
@@ -112,48 +106,40 @@ export default function AdminLayout({
             </SidebarMenuItem>
           </SidebarMenu>
 
-           <SidebarGroup className="mt-4">
+           {/* Maybe remove or restrict settings for Sindico */}
+           {/* <SidebarGroup className="mt-4">
               <SidebarGroupLabel>Configurações</SidebarGroupLabel>
               <SidebarMenu>
-                  <SidebarMenuItem>
-                      <Link href="/admin/settings/fees" legacyBehavior passHref>
+                   <SidebarMenuItem>
+                       <Link href="/sindico/settings/fees" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Taxas">
                               <DollarSign />
                               <span>Taxas</span>
                           </SidebarMenuButton>
                       </Link>
-                  </SidebarMenuItem>
-                   {/* Add other settings links here */}
-                   <SidebarMenuItem>
-                       <Link href="/admin/settings/users" legacyBehavior passHref>
-                          <SidebarMenuButton tooltip="Usuários Admin">
-                              <Users />
-                              <span>Usuários Admin</span>
-                          </SidebarMenuButton>
-                      </Link>
                    </SidebarMenuItem>
               </SidebarMenu>
-          </SidebarGroup>
+          </SidebarGroup> */}
 
         </SidebarContent>
          <Separator />
         <SidebarFooter className="p-2">
            <SidebarMenu>
-             <SidebarMenuItem>
-               <Link href="/admin/settings" legacyBehavior passHref>
-                  <SidebarMenuButton tooltip="Configurações Gerais">
+             {/* <SidebarMenuItem>
+               <Link href="/sindico/settings" legacyBehavior passHref>
+                  <SidebarMenuButton tooltip="Configurações">
                     <Settings />
                      <span>Configurações</span>
                   </SidebarMenuButton>
                </Link>
-            </SidebarMenuItem>
+            </SidebarMenuItem> */}
             <SidebarMenuItem>
               {/* TODO: Add logout functionality here */}
-               <Link href="/login" passHref> {/* Redirect to login on logout */}
-                <SidebarMenuButton tooltip="Sair">
-                  <LogOut />
-                  <span>Sair</span>
-                </SidebarMenuButton>
+              <Link href="/login" passHref> {/* Redirect to login on logout */}
+                  <SidebarMenuButton tooltip="Sair">
+                    <LogOut />
+                    <span>Sair</span>
+                  </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
           </SidebarMenu>
@@ -162,7 +148,7 @@ export default function AdminLayout({
       <SidebarInset className="flex-1 p-4 md:p-6 bg-background">
         <div className="flex items-center justify-between mb-6">
            <SidebarTrigger className="md:hidden" /> {/* Only show trigger on mobile */}
-           {/* TODO: Maybe add breadcrumbs or page title here */}
+           {/* TODO: Add condo switcher or breadcrumbs */}
         </div>
         {children}
       </SidebarInset>

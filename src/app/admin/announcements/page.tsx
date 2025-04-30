@@ -12,6 +12,8 @@ import { Trash2, Edit, Bell, PlusCircle, Send } from 'lucide-react'; // Send ico
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added SelectGroup, SelectLabel
 import { Checkbox } from "@/components/ui/checkbox"; // Added Checkbox
+import { buttonVariants } from "@/components/ui/button";
+import { notifyNewAnnouncement } from '@/services/notifications'; // Placeholder import
 
 interface Announcement {
     id: number;
@@ -42,7 +44,7 @@ export default function AdminAnnouncementsPage() {
     const [announcementContent, setAnnouncementContent] = useState('');
     const [announcementType, setAnnouncementType] = useState<'Aviso' | 'Manutenção' | 'Reunião' | 'Evento' | undefined>(undefined);
     const [announcementTarget, setAnnouncementTarget] = useState<string | undefined>(undefined);
-    const [sendEmailNotification, setSendEmailNotification] = useState(true); // Default to send email
+    const [sendNotificationChecked, setSendNotificationChecked] = useState(true); // Default to send notification
 
     const [announcementToRemove, setAnnouncementToRemove] = useState<Announcement | null>(null);
 
@@ -54,7 +56,7 @@ export default function AdminAnnouncementsPage() {
         setAnnouncementContent('');
         setAnnouncementType(undefined);
         setAnnouncementTarget(undefined);
-        setSendEmailNotification(true);
+        setSendNotificationChecked(true);
         setShowAddForm(false);
     };
 
@@ -72,30 +74,50 @@ export default function AdminAnnouncementsPage() {
              targetCondo: announcementTarget,
          };
 
+        let successMessage = '';
+        let isNew = false;
+
         if (editingAnnouncement) {
             // TODO: Implement actual update logic (send to backend)
-             // Note: Re-sending email might need careful consideration on update
             console.log("Updating announcement:", editingAnnouncement.id, announcementData);
             setAnnouncements(announcements.map(a => a.id === editingAnnouncement.id ? { ...a, ...announcementData } : a)); // Keep original publishDate
-            toast({ title: "Sucesso", description: "Aviso atualizado com sucesso." });
-             if (sendEmailNotification) {
-                // TODO: Trigger email sending logic again for the update
-                console.log("Sending update email notification...");
-            }
+            successMessage = "Aviso atualizado com sucesso.";
         } else {
             // TODO: Implement actual add logic (send to backend)
             const newId = Math.max(0, ...announcements.map(a => a.id)) + 1;
             const newAnnouncement = { ...announcementData, id: newId, publishDate: new Date() };
             console.log("Adding announcement:", newAnnouncement);
             setAnnouncements([newAnnouncement, ...announcements]); // Add to top
-            toast({ title: "Sucesso", description: "Aviso publicado com sucesso." });
-
-            if (sendEmailNotification) {
-                // TODO: Trigger email sending logic for the new announcement
-                console.log("Sending email notification...");
-                // Example: await sendEmail({ to: 'all_residents@domain.com', subject: newAnnouncement.title, body: newAnnouncement.content });
-            }
+            successMessage = "Aviso publicado com sucesso.";
+            isNew = true;
         }
+
+        // Send Notifications
+        if (sendNotificationChecked) {
+            console.log(`Sending notifications for ${isNew ? 'new' : 'updated'} announcement...`);
+             try {
+                 // TODO: Fetch target residents based on announcementTarget ('all' or specific condo)
+                 // const targetResidents = await getResidentsForNotification(announcementTarget);
+                 const targetResidents = [ // Simulation
+                     { email: 'residente1@email.com', pushToken: 'token123' },
+                     { email: 'residente2@email.com', pushToken: 'token456' },
+                 ];
+
+                 for (const resident of targetResidents) {
+                     // Using placeholder function - replace with actual implementation
+                     await notifyNewAnnouncement(resident, announcementData.title);
+                 }
+                 toast({ title: "Sucesso", description: `${successMessage} Notificações enviadas.` });
+
+             } catch (error) {
+                console.error("Failed to send notifications:", error);
+                toast({ title: "Sucesso Parcial", description: `${successMessage} Falha ao enviar notificações.`, variant: "destructive" });
+             }
+
+        } else {
+            toast({ title: "Sucesso", description: successMessage });
+        }
+
         resetForm();
     };
 
@@ -105,7 +127,7 @@ export default function AdminAnnouncementsPage() {
         setAnnouncementContent(announcement.content);
         setAnnouncementType(announcement.type);
         setAnnouncementTarget(announcement.targetCondo);
-        setSendEmailNotification(true); // Default to true when editing, maybe check if already sent?
+        setSendNotificationChecked(true); // Default to true when editing, maybe check if already sent?
         setShowAddForm(true);
     };
 
@@ -178,15 +200,15 @@ export default function AdminAnnouncementsPage() {
                              </div>
                               <div className="flex items-center space-x-2 pb-1">
                                  <Checkbox
-                                    id="send-email"
-                                    checked={sendEmailNotification}
-                                    onCheckedChange={(checked) => setSendEmailNotification(Boolean(checked))}
+                                    id="send-notification"
+                                    checked={sendNotificationChecked}
+                                    onCheckedChange={(checked) => setSendNotificationChecked(Boolean(checked))}
                                  />
                                 <label
-                                    htmlFor="send-email"
+                                    htmlFor="send-notification"
                                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                 >
-                                    Notificar moradores por email
+                                    Notificar moradores (Email/Push)
                                 </label>
                             </div>
                          </div>
@@ -203,7 +225,7 @@ export default function AdminAnnouncementsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Avisos Publicados</CardTitle>
-                    {/* Add filtering/sorting options here */}
+                    {/* TODO: Add filtering/sorting options here */}
                 </CardHeader>
                 <CardContent>
                      <div className="overflow-x-auto">
@@ -215,7 +237,7 @@ export default function AdminAnnouncementsPage() {
                                         <TableHead>Tipo</TableHead>
                                         <TableHead>Destino</TableHead>
                                         <TableHead>Data Publicação</TableHead>
-                                        {/* <TableHead>Email Enviado?</TableHead> */}
+                                        {/* <TableHead>Notificação Enviada?</TableHead> */}
                                         <TableHead className="text-right">Ações</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -264,6 +286,3 @@ export default function AdminAnnouncementsPage() {
         </div>
     );
 }
-
-// Helper for destructive variant in AlertDialogAction if not directly supported
-import { buttonVariants } from "@/components/ui/button";

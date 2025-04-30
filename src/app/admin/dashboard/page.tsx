@@ -3,21 +3,25 @@ import { Users, Building, Bell, MessageSquareQuote, CalendarCheck, DollarSign } 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
-export default function AdminDashboardPage() {
-  // Fetch summary data here (total residents, condos, pending items etc.)
-  const summary = {
-      totalCondos: 2,
-      totalResidents: 500, // Example
-      pendingComplaints: 5, // Example
-      pendingReservations: 3, // Example (awaiting payment confirmation)
-      unreadAnnouncements: 0, // Example
-  };
+// TODO: Fetch summary data dynamically, considering all condos for the admin role
+const globalSummary = {
+    totalCondos: 2,
+    totalResidents: 500, // Example
+    pendingOccurrences: 5, // Example (across all condos)
+    pendingReservations: 3, // Example (awaiting payment confirmation)
+};
 
+
+export default function AdminDashboardPage() {
+
+  // In a real app, this page would likely show aggregated data
+  // or allow selection to view a specific condo's details if needed
+  // For now, showing global data.
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-foreground">Painel Administrativo</h1>
-      <p className="text-muted-foreground">Visão geral da gestão dos condomínios.</p>
+      <h1 className="text-3xl font-bold text-foreground">Visão Geral - Admin</h1>
+      <p className="text-muted-foreground">Visão geral da gestão de todos os condomínios.</p>
 
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Card>
@@ -26,7 +30,7 @@ export default function AdminDashboardPage() {
             <Building className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.totalCondos}</div>
+            <div className="text-2xl font-bold">{globalSummary.totalCondos}</div>
             <p className="text-xs text-muted-foreground">
               Condomínios gerenciados
             </p>
@@ -41,7 +45,7 @@ export default function AdminDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.totalResidents}</div>
+            <div className="text-2xl font-bold">{globalSummary.totalResidents}</div>
             <p className="text-xs text-muted-foreground">
               Total de moradores cadastrados
             </p>
@@ -52,16 +56,16 @@ export default function AdminDashboardPage() {
         </Card>
          <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Reclamações Pendentes</CardTitle>
+            <CardTitle className="text-sm font-medium">Ocorrências Pendentes</CardTitle>
             <MessageSquareQuote className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.pendingComplaints}</div>
+            <div className="text-2xl font-bold">{globalSummary.pendingOccurrences}</div>
             <p className="text-xs text-muted-foreground">
-             Aguardando resposta
+             Aguardando resposta/ação
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                <Link href="/admin/complaints">Ver Reclamações</Link>
+                <Link href="/admin/complaints">Ver Ocorrências</Link> {/* Updated link name */}
             </Button>
           </CardContent>
         </Card>
@@ -71,7 +75,7 @@ export default function AdminDashboardPage() {
             <CalendarCheck className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{summary.pendingReservations}</div>
+            <div className="text-2xl font-bold">{globalSummary.pendingReservations}</div>
             <p className="text-xs text-muted-foreground">
               Aguardando confirmação de pagamento
             </p>
@@ -84,11 +88,11 @@ export default function AdminDashboardPage() {
 
        <Card>
         <CardHeader>
-          <CardTitle>Ações Rápidas</CardTitle>
+          <CardTitle>Ações Rápidas (Admin)</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             <Button variant="outline" asChild>
-                <Link href="/admin/announcements">Criar Aviso</Link>
+                <Link href="/admin/announcements">Criar Aviso Global</Link>
             </Button>
              <Button variant="outline" asChild>
                 <Link href="/admin/residents">Adicionar Morador</Link>
@@ -96,8 +100,14 @@ export default function AdminDashboardPage() {
              <Button variant="outline" asChild>
                 <Link href="/admin/condominiums">Adicionar Condomínio</Link>
             </Button>
+              <Button variant="outline" asChild>
+                <Link href="/admin/tickets">Ver Tickets</Link>
+            </Button>
              <Button variant="outline" asChild>
-                <Link href="/admin/settings/fees">Ajustar Taxas</Link>
+                <Link href="/admin/settings/fees">Ajustar Taxas Globais</Link>
+            </Button>
+             <Button variant="outline" asChild>
+                <Link href="/admin/settings/users">Gerenciar Usuários</Link>
             </Button>
         </CardContent>
       </Card>

@@ -12,20 +12,33 @@ import { useRouter } from 'next/navigation'; // Use App Router's router
 export default function LoginPage() {
     const [residentEmail, setResidentEmail] = useState('');
     const [residentPassword, setResidentPassword] = useState('');
+    const [sindicoEmail, setSindicoEmail] = useState('');
+    const [sindicoPassword, setSindicoPassword] = useState('');
     const [adminEmail, setAdminEmail] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
 
-    const handleLogin = async (type: 'resident' | 'admin') => {
+    const handleLogin = async (type: 'resident' | 'sindico' | 'admin') => {
         setIsLoading(true);
-        const email = type === 'resident' ? residentEmail : adminEmail;
-        const password = type === 'resident' ? residentPassword : adminPassword;
+        let email = '';
+        let password = '';
+
+        if (type === 'resident') {
+            email = residentEmail;
+            password = residentPassword;
+        } else if (type === 'sindico') {
+            email = sindicoEmail;
+            password = sindicoPassword;
+        } else { // admin
+            email = adminEmail;
+            password = adminPassword;
+        }
 
         console.log(`Attempting ${type} login with email: ${email}`);
 
-        // TODO: Implement actual authentication logic here
+        // TODO: Implement actual authentication logic here using Firebase Auth or similar
         // Replace this setTimeout with your actual API call
         await new Promise(resolve => setTimeout(resolve, 1500));
 
@@ -36,9 +49,15 @@ export default function LoginPage() {
         if (type === 'resident' && email === 'residente@email.com' && password === 'senha123') {
             loginSuccess = true;
             redirectPath = '/resident/dashboard';
+            // TODO: Set user session/context for resident
+        } else if (type === 'sindico' && email === 'sindico@email.com' && password === 'sindico123') {
+            loginSuccess = true;
+            redirectPath = '/sindico/dashboard'; // Redirect to sindico dashboard
+            // TODO: Set user session/context for sindico (with their managed condos)
         } else if (type === 'admin' && email === 'admin@email.com' && password === 'admin123') {
             loginSuccess = true;
-            redirectPath = '/admin/dashboard';
+            redirectPath = '/admin/dashboard'; // Redirect to general admin dashboard
+            // TODO: Set user session/context for admin
         }
         // --- END SIMULATED AUTH ---
 
@@ -63,9 +82,10 @@ export default function LoginPage() {
                     <h1 className="text-3xl font-bold text-foreground">DigiCondo</h1>
                     <p className="text-muted-foreground">Acesse sua conta</p>
                 </div>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="resident">Morador</TabsTrigger>
-                    <TabsTrigger value="admin">Admin / Síndico</TabsTrigger>
+                    <TabsTrigger value="sindico">Síndico</TabsTrigger>
+                    <TabsTrigger value="admin">Admin</TabsTrigger>
                 </TabsList>
 
                 {/* Resident Login Tab */}
@@ -109,12 +129,53 @@ export default function LoginPage() {
                     </Card>
                 </TabsContent>
 
-                {/* Admin/Síndico Login Tab */}
-                <TabsContent value="admin">
+                {/* Síndico Login Tab */}
+                <TabsContent value="sindico">
                      <Card>
                         <CardHeader>
-                            <CardTitle>Acesso Administrativo</CardTitle>
-                            <CardDescription>Login para síndicos, administradores e supervisores.</CardDescription>
+                            <CardTitle>Acesso do Síndico</CardTitle>
+                            <CardDescription>Login para síndicos de condomínios.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-1">
+                                <Label htmlFor="sindico-email">Email</Label>
+                                <Input
+                                    id="sindico-email"
+                                    type="email"
+                                    placeholder="sindico@email.com"
+                                    value={sindicoEmail}
+                                    onChange={(e) => setSindicoEmail(e.target.value)}
+                                    disabled={isLoading}
+                                 />
+                            </div>
+                            <div className="space-y-1">
+                                <Label htmlFor="sindico-password">Senha</Label>
+                                <Input
+                                    id="sindico-password"
+                                    type="password"
+                                    value={sindicoPassword}
+                                    onChange={(e) => setSindicoPassword(e.target.value)}
+                                    disabled={isLoading}
+                                />
+                            </div>
+                        </CardContent>
+                        <CardFooter className="flex flex-col gap-4">
+                            <Button className="w-full" onClick={() => handleLogin('sindico')} disabled={isLoading}>
+                                 {isLoading ? 'Entrando...' : 'Entrar'}
+                            </Button>
+                             <Button variant="link" className="text-sm p-0 h-auto" disabled={isLoading}>
+                                Esqueceu sua senha?
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </TabsContent>
+
+                {/* Admin Login Tab */}
+                 <TabsContent value="admin">
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Acesso Admin</CardTitle>
+                            <CardDescription>Login para administradores do sistema DigiCondo.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-1">
@@ -149,6 +210,7 @@ export default function LoginPage() {
                         </CardFooter>
                     </Card>
                 </TabsContent>
+
             </Tabs>
         </div>
     );
