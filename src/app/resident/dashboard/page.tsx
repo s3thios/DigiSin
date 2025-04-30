@@ -59,7 +59,7 @@ export default function DashboardPage() {
               Ocorrências pendentes
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                <Link href="/resident/complaints">Registrar Ocorrência</Link> {/* Updated text */}
+                <Link href="/resident/complaints">Registrar Ocorrência</Link>
             </Button>
           </CardContent>
         </Card>
@@ -95,10 +95,10 @@ export default function DashboardPage() {
                 <Link href="/resident/vehicles">Cadastrar Veículo</Link>
             </Button>
              <Button variant="outline" asChild>
-                <Link href="/resident/complaints">Abrir Ocorrência</Link> {/* Updated text */}
+                <Link href="/resident/complaints">Abrir Ocorrência</Link>
             </Button>
              <Button variant="outline" asChild>
-                <Link href="/resident/marketplace">Ver Classificados</Link> {/* Updated text */}
+                <Link href="/resident/marketplace">Ver Classificados</Link>
             </Button>
              <Button variant="outline" asChild>
                 <Link href="/resident/profile">Meu Perfil</Link>

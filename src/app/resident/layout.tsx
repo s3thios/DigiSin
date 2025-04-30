@@ -13,7 +13,7 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { Home, Calendar, Bell, FileText, Settings, User, LogOut, Building, FileWarning, Utensils, Car, Bike, PawPrint, FileUp, FileImage, MessageSquareQuote, MapPin, Briefcase, Package, Phone, Ticket } from 'lucide-react'; // Added Ticket
+import { Home, Calendar, Bell, FileText, Settings, User, LogOut, Building, FileWarning, Utensils, Car, Bike, PawPrint, FileUp, FileImage, MessageSquareQuote, MapPin, Briefcase, Package, Phone, Ticket, Users } from 'lucide-react'; // Added Ticket and Users
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
