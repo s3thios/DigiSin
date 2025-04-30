@@ -110,7 +110,7 @@ export default function ResidentLayout({
                   <SidebarMenuItem>
                       <Link href="/resident/visitors" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Visitantes">
-                              <Users /> {/* Changed icon to Users */}
+                              <Users /> {/* Corrected */}
                               <span>Visitantes</span>
                           </SidebarMenuButton>
                       </Link>
@@ -195,12 +195,16 @@ export default function ResidentLayout({
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="flex-1 p-4 md:p-6 bg-background">
-        <div className="flex items-center justify-between mb-6">
-           <SidebarTrigger className="md:hidden" /> {/* Only show trigger on mobile */}
+       {/* Removed flex-1 to allow centering or other alignment strategies */}
+       <SidebarInset className="p-4 md:p-6 bg-background w-full"> {/* Added w-full */}
+        <div className="flex items-center justify-between mb-6 md:hidden"> {/* Adjusted margin for mobile */}
+           <SidebarTrigger /> {/* Show trigger on mobile */}
            {/* Maybe add breadcrumbs or page title here */}
         </div>
-        {children}
+         {/* Max-width container for centering content */}
+         <div className="max-w-7xl mx-auto w-full">
+             {children}
+         </div>
       </SidebarInset>
     </div>
   );
