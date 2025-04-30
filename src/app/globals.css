@@ -8,8 +8,8 @@ body {
 
 @layer base {
   :root {
-    /* Updated Palette based on request - Canary Yellow background */
-    --background: 54 100% 50%; /* #FFEF00 Canary Yellow */
+    /* Updated Palette based on request - Canary Yellow background (#ffff00) */
+    --background: 60 100% 50%; /* #ffff00 Canary Yellow */
     --foreground: 0 0% 0%; /* #000000 Black */
     --card: 0 0% 100%; /* White (Assuming cards remain white for contrast) */
     --card-foreground: 0 0% 0%; /* Black */
