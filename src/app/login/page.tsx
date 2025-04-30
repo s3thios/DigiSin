@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -9,19 +10,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation'; // Use App Router's router
 
+// Basic CPF format validation (XXX.XXX.XXX-XX)
+const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
+// Basic CNPJ format validation (XX.XXX.XXX/XXXX-XX)
+const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+
 export default function LoginPage() {
     // Login States
-    const [residentEmail, setResidentEmail] = useState('');
+    const [residentCpf, setResidentCpf] = useState('');
     const [residentPassword, setResidentPassword] = useState('');
-    const [sindicoEmail, setSindicoEmail] = useState('');
+    const [sindicoCnpj, setSindicoCnpj] = useState('');
     const [sindicoPassword, setSindicoPassword] = useState('');
-    const [adminEmail, setAdminEmail] = useState('');
+    const [adminCpf, setAdminCpf] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
 
-    // Registration States
+    // Registration States (Only for Resident)
     const [isRegistering, setIsRegistering] = useState(false);
     const [registerName, setRegisterName] = useState('');
     const [registerEmail, setRegisterEmail] = useState('');
+    const [registerCpf, setRegisterCpf] = useState(''); // Added CPF for registration
     const [registerPassword, setRegisterPassword] = useState('');
     const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
 
@@ -32,42 +39,63 @@ export default function LoginPage() {
     const resetRegisterForm = () => {
         setRegisterName('');
         setRegisterEmail('');
+        setRegisterCpf('');
         setRegisterPassword('');
         setRegisterConfirmPassword('');
     }
 
     const handleLogin = async (type: 'resident' | 'sindico' | 'admin') => {
         setIsLoading(true);
-        let email = '';
+        let identifier = ''; // CPF or CNPJ
         let password = '';
+        let validationError = '';
 
         if (type === 'resident') {
-            email = residentEmail;
+            identifier = residentCpf;
             password = residentPassword;
+            if (!cpfRegex.test(identifier)) {
+                validationError = 'Formato de CPF inválido (use XXX.XXX.XXX-XX).';
+            }
         } else if (type === 'sindico') {
-            email = sindicoEmail;
+            identifier = sindicoCnpj;
             password = sindicoPassword;
+             if (!cnpjRegex.test(identifier)) {
+                 validationError = 'Formato de CNPJ inválido (use XX.XXX.XXX/XXXX-XX).';
+             }
         } else { // admin
-            email = adminEmail;
+            identifier = adminCpf;
             password = adminPassword;
+             if (!cpfRegex.test(identifier)) {
+                 validationError = 'Formato de CPF inválido (use XXX.XXX.XXX-XX).';
+             }
         }
 
-        console.log(`Attempting ${type} login with email: ${email}`);
+        if (validationError) {
+            toast({ title: "Erro de Validação", description: validationError, variant: "destructive" });
+            setIsLoading(false);
+            return;
+        }
 
-        // TODO: Implement actual authentication logic here using Firebase Auth or similar
+        console.log(`Attempting ${type} login with identifier: ${identifier}`);
+
+        // --- BACKEND NOTE ---
+        // Implement actual authentication logic here using Firebase Auth or similar.
+        // Ensure the backend verifies credentials securely against the database.
+        // Apply SQL injection protection (e.g., prepared statements) on the backend.
+        // Implement rate limiting to prevent brute-force attacks.
         await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
 
         // --- SIMULATED AUTH ---
         let loginSuccess = false;
         let redirectPath = '/';
 
-        if (type === 'resident' && email === 'residente@email.com' && password === 'senha123') {
+        if (type === 'resident' && identifier === '111.111.111-11' && password === 'senha123') {
             loginSuccess = true;
             redirectPath = '/resident/dashboard';
-        } else if (type === 'sindico' && email === 'sindico@email.com' && password === 'sindico123') {
+        } else if (type === 'sindico' && identifier === '11.222.333/0001-44' && password === 'sindico123') {
             loginSuccess = true;
             redirectPath = '/sindico/dashboard';
-        } else if (type === 'admin' && email === 'admin@email.com' && password === 'admin123') {
+        } else if (type === 'admin' && identifier === '999.999.999-99' && password === 'admin123') {
             loginSuccess = true;
             redirectPath = '/admin/dashboard';
         }
@@ -81,41 +109,53 @@ export default function LoginPage() {
         } else {
             toast({
                 title: "Falha no Login",
-                description: "Email ou senha incorretos. Tente novamente.",
+                description: "Identificador ou senha incorretos. Tente novamente.",
                 variant: "destructive",
             });
         }
     };
 
+     // Handles Resident Registration only
      const handleRegister = async () => {
         setIsLoading(true);
 
         // Validation
-        if (!registerName.trim() || !registerEmail.trim() || !registerPassword || !registerConfirmPassword) {
+        if (!registerName.trim() || !registerEmail.trim() || !registerCpf.trim() || !registerPassword || !registerConfirmPassword) {
             toast({ title: "Erro", description: "Preencha todos os campos de registro.", variant: "destructive" });
             setIsLoading(false);
             return;
         }
+         if (!cpfRegex.test(registerCpf)) {
+            toast({ title: "Erro", description: "Formato de CPF inválido (use XXX.XXX.XXX-XX).", variant: "destructive" });
+            setIsLoading(false);
+            return;
+         }
         if (!/\S+@\S+\.\S+/.test(registerEmail)) {
             toast({ title: "Erro", description: "Formato de email inválido.", variant: "destructive" });
             setIsLoading(false);
             return;
         }
-        if (registerPassword.length < 8) {
-            toast({ title: "Erro", description: "A senha deve ter pelo menos 8 caracteres.", variant: "destructive" });
-            setIsLoading(false);
-            return;
-        }
+         // Password Strength Check (Example: Minimum 8 chars, 1 number, 1 uppercase)
+         const passwordStrengthRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
+         if (!passwordStrengthRegex.test(registerPassword)) {
+             toast({ title: "Erro", description: "A senha deve ter no mínimo 8 caracteres, incluindo uma letra maiúscula e um número.", variant: "destructive" });
+             setIsLoading(false);
+             return;
+         }
         if (registerPassword !== registerConfirmPassword) {
             toast({ title: "Erro", description: "As senhas não coincidem.", variant: "destructive" });
             setIsLoading(false);
             return;
         }
 
-        console.log(`Attempting registration for: ${registerName} with email: ${registerEmail}`);
+        console.log(`Attempting resident registration for: ${registerName} (CPF: ${registerCpf}) with email: ${registerEmail}`);
 
-        // TODO: Implement actual registration logic here (e.g., Firebase createUserWithEmailAndPassword)
-        // This might involve sending data to admin for approval before activating the account.
+        // --- BACKEND NOTE ---
+        // Implement actual registration logic here.
+        // - Securely hash the password before storing.
+        // - Verify CPF uniqueness and potentially link to condo unit based on admin pre-registration.
+        // - Send verification email if needed.
+        // - Ensure backend applies SQL injection protection.
         await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
 
          // --- SIMULATED REGISTRATION ---
@@ -129,11 +169,11 @@ export default function LoginPage() {
             toast({ title: "Registro bem-sucedido!", description: "Sua conta foi criada. Faça o login." });
              resetRegisterForm();
              setIsRegistering(false); // Switch back to login view
-             // Optionally prefill login email: setResidentEmail(registerEmail);
+             setResidentCpf(registerCpf); // Pre-fill login CPF
          } else {
              toast({
                  title: "Falha no Registro",
-                 description: "Não foi possível criar a conta. Tente novamente.", // Add more specific errors from backend
+                 description: "Não foi possível criar a conta. Verifique os dados ou contate o suporte.", // Add more specific errors from backend
                  variant: "destructive",
              });
          }
@@ -144,7 +184,6 @@ export default function LoginPage() {
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
             <Tabs defaultValue="resident" className="w-full max-w-md">
                 <div className="text-center mb-6">
-                    {/* Logo or Title */}
                     <h1 className="text-3xl font-bold text-foreground">DigiCondo</h1>
                     <p className="text-muted-foreground">Acesse ou crie sua conta</p>
                 </div>
@@ -160,24 +199,40 @@ export default function LoginPage() {
                         <CardHeader>
                             <CardTitle>{isRegistering ? 'Criar Conta de Morador' : 'Acesso do Morador'}</CardTitle>
                             <CardDescription>
-                                {isRegistering ? 'Preencha seus dados para criar uma conta.' : 'Use seu email e senha cadastrados.'}
+                                {isRegistering ? 'Preencha seus dados para criar uma conta.' : 'Use seu CPF e senha cadastrados.'}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {isRegistering ? (
                                 <>
+                                    {/* Registration Form (Resident) */}
                                     <div className="space-y-1">
-                                        <Label htmlFor="register-name">Nome Completo</Label>
+                                        <Label htmlFor="register-name">Nome Completo*</Label>
                                         <Input
                                             id="register-name"
                                             placeholder="Seu nome completo"
                                             value={registerName}
                                             onChange={(e) => setRegisterName(e.target.value)}
                                             disabled={isLoading}
+                                            required
                                         />
                                     </div>
+                                    <div className="space-y-1">
+                                        <Label htmlFor="register-cpf">CPF*</Label>
+                                        <Input
+                                            id="register-cpf"
+                                            placeholder="000.000.000-00"
+                                            value={registerCpf}
+                                            onChange={(e) => setRegisterCpf(e.target.value)} // TODO: Add CPF mask
+                                            disabled={isLoading}
+                                            required
+                                        />
+                                         {registerCpf && !cpfRegex.test(registerCpf) && (
+                                             <p className="text-xs text-destructive">Formato inválido.</p>
+                                         )}
+                                    </div>
                                      <div className="space-y-1">
-                                        <Label htmlFor="register-email">Email</Label>
+                                        <Label htmlFor="register-email">Email*</Label>
                                         <Input
                                             id="register-email"
                                             type="email"
@@ -185,21 +240,23 @@ export default function LoginPage() {
                                             value={registerEmail}
                                             onChange={(e) => setRegisterEmail(e.target.value)}
                                             disabled={isLoading}
+                                            required
                                         />
                                     </div>
                                      <div className="space-y-1">
-                                        <Label htmlFor="register-password">Senha</Label>
+                                        <Label htmlFor="register-password">Senha*</Label>
                                         <Input
                                             id="register-password"
                                             type="password"
-                                            placeholder="Mínimo 8 caracteres"
+                                            placeholder="Mín. 8 caracteres, 1 maiúscula, 1 número"
                                             value={registerPassword}
                                             onChange={(e) => setRegisterPassword(e.target.value)}
                                             disabled={isLoading}
+                                            required
                                         />
                                     </div>
                                      <div className="space-y-1">
-                                        <Label htmlFor="register-confirm-password">Confirmar Senha</Label>
+                                        <Label htmlFor="register-confirm-password">Confirmar Senha*</Label>
                                         <Input
                                             id="register-confirm-password"
                                             type="password"
@@ -207,23 +264,23 @@ export default function LoginPage() {
                                             value={registerConfirmPassword}
                                             onChange={(e) => setRegisterConfirmPassword(e.target.value)}
                                             disabled={isLoading}
+                                            required
                                         />
                                          {registerPassword && registerConfirmPassword && registerPassword !== registerConfirmPassword && (
                                              <p className="text-xs text-destructive">As senhas não coincidem.</p>
                                          )}
                                     </div>
-                                    {/* TODO: Add fields for CPF, Block, Apartment if needed during initial registration, or handle later */}
                                 </>
                             ) : (
                                 <>
+                                    {/* Login Form (Resident) */}
                                     <div className="space-y-1">
-                                        <Label htmlFor="resident-email">Email</Label>
+                                        <Label htmlFor="resident-cpf">CPF</Label>
                                         <Input
-                                            id="resident-email"
-                                            type="email"
-                                            placeholder="seu.email@exemplo.com"
-                                            value={residentEmail}
-                                            onChange={(e) => setResidentEmail(e.target.value)}
+                                            id="resident-cpf"
+                                            placeholder="000.000.000-00"
+                                            value={residentCpf}
+                                            onChange={(e) => setResidentCpf(e.target.value)} // TODO: Add CPF mask
                                             disabled={isLoading}
                                         />
                                     </div>
@@ -246,7 +303,7 @@ export default function LoginPage() {
                                 onClick={() => isRegistering ? handleRegister() : handleLogin('resident')}
                                 disabled={isLoading}
                             >
-                                {isLoading ? (isRegistering ? 'Registrando...' : 'Entrando...') : (isRegistering ? 'Registrar' : 'Entrar')}
+                                {isLoading ? (isRegistering ? 'Registrando...' : 'Entrando...') : (isRegistering ? 'Criar Conta' : 'Entrar')}
                             </Button>
 
                              {isRegistering ? (
@@ -272,22 +329,21 @@ export default function LoginPage() {
                      <Card>
                         <CardHeader>
                             <CardTitle>Acesso do Síndico</CardTitle>
-                            <CardDescription>Login para síndicos de condomínios.</CardDescription>
+                            <CardDescription>Login com CNPJ do condomínio e senha pessoal.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-1">
-                                <Label htmlFor="sindico-email">Email</Label>
+                                <Label htmlFor="sindico-cnpj">CNPJ do Condomínio</Label>
                                 <Input
-                                    id="sindico-email"
-                                    type="email"
-                                    placeholder="sindico@email.com"
-                                    value={sindicoEmail}
-                                    onChange={(e) => setSindicoEmail(e.target.value)}
+                                    id="sindico-cnpj"
+                                    placeholder="00.000.000/0000-00"
+                                    value={sindicoCnpj}
+                                    onChange={(e) => setSindicoCnpj(e.target.value)} // TODO: Add CNPJ mask
                                     disabled={isLoading}
                                  />
                             </div>
                             <div className="space-y-1">
-                                <Label htmlFor="sindico-password">Senha</Label>
+                                <Label htmlFor="sindico-password">Senha Pessoal</Label>
                                 <Input
                                     id="sindico-password"
                                     type="password"
@@ -312,18 +368,17 @@ export default function LoginPage() {
                  <TabsContent value="admin">
                      <Card>
                         <CardHeader>
-                            <CardTitle>Acesso Admin</CardTitle>
-                            <CardDescription>Login para administradores do sistema DigiCondo.</CardDescription>
+                            <CardTitle>Acesso Admin (DigiCondo)</CardTitle>
+                            <CardDescription>Login para administradores da plataforma.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-1">
-                                <Label htmlFor="admin-email">Email</Label>
+                                <Label htmlFor="admin-cpf">CPF</Label>
                                 <Input
-                                    id="admin-email"
-                                    type="email"
-                                    placeholder="admin@digicondo.com"
-                                    value={adminEmail}
-                                    onChange={(e) => setAdminEmail(e.target.value)}
+                                    id="admin-cpf"
+                                    placeholder="000.000.000-00"
+                                    value={adminCpf}
+                                    onChange={(e) => setAdminCpf(e.target.value)} // TODO: Add CPF mask
                                     disabled={isLoading}
                                  />
                             </div>

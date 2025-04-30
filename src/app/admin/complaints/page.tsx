@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useMemo } from 'react';
@@ -6,14 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquareQuote, CheckCircle, Clock, Filter, Download, Eye, ThumbsUp, Lightbulb, Ticket } from 'lucide-react'; // Added ThumbsUp, Lightbulb, Ticket
+import { MessageSquareQuote, CheckCircle, Clock, Filter, Download, Eye, ThumbsUp, Lightbulb, Ticket } from 'lucide-react'; // Icons for types and status
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog"; // Use Dialog for details/response
-import Image from 'next/image'; // For displaying attached photos
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose, DialogDescription } from "@/components/ui/dialog";
+import Image from 'next/image';
+import { notifyTicketReply, notifyTicketStatusChange } from '@/services/notifications'; // Placeholder imports
 
 
 type OccurrenceStatus = 'pending' | 'in_progress' | 'resolved' | 'archived';
+// Updated OccurrenceType as requested
 type OccurrenceType = 'reclamação' | 'elogio' | 'sugestão';
 
 interface Occurrence {
@@ -22,21 +25,22 @@ interface Occurrence {
     type: OccurrenceType;
     description: string;
     status: OccurrenceStatus;
-    response?: string; // Direct response (legacy?) or link to ticket
-    residentName: string; // Name of the resident who submitted
+    response?: string; // Last response excerpt or link to ticket
+    residentName: string;
+    residentEmail?: string; // Added for notifications
     condominium: string;
-    unit: string; // Block + Apartment
-    photoUrl?: string; // URL of attached photo
-    assignedTo?: string; // Name of Admin/Sindico handling it
-    ticketId?: number; // Link to the tracking ticket
+    unit: string;
+    photoUrl?: string;
+    assignedTo?: string;
+    ticketId?: number;
 }
 
 // Sample data - replace with actual data fetching
 const initialOccurrences: Occurrence[] = [
-    { id: 1, date: new Date(2024, 6, 24), type: "reclamação", description: "Barulho excessivo vindo do apartamento 301 após as 22h.", status: "pending", residentName: "Carlos Proprietário", condominium: "Plaza das Flores IV", unit: "A/101", photoUrl: "https://picsum.photos/300/200?random=10" },
-    { id: 2, date: new Date(2024, 6, 20), type: "sugestão", description: "Instalar bicicletário na área comum.", status: "resolved", response: "Sugestão anotada para próxima assembleia.", residentName: "Fernanda Inquilina", condominium: "Plaza das Flores IV", unit: "A/102", assignedTo: "Síndico Principal", ticketId: 101 },
-    { id: 3, date: new Date(2024, 6, 18), type: "elogio", description: "Parabéns pela organização da festa junina!", status: "archived", residentName: "Roberto Proprietário", condominium: "Plaza das Flores III", unit: "B/201", assignedTo: "Admin Auxiliar"},
-    { id: 4, date: new Date(2024, 6, 25), type: "reclamação", description: "Lixo acumulado próximo ao bloco C.", status: "in_progress", residentName: "Juliana Proprietária", condominium: "Plaza das Flores III", unit: "B/202", assignedTo: "Supervisor Predial", ticketId: 102 },
+    { id: 1, date: new Date(2024, 6, 24), type: "reclamação", description: "Barulho excessivo vindo do apartamento 301 após as 22h.", status: "pending", residentName: "Carlos Proprietário", residentEmail: "carlos.prop@email.com", condominium: "Plaza das Flores IV", unit: "A/101", photoUrl: "https://picsum.photos/300/200?random=10" },
+    { id: 2, date: new Date(2024, 6, 20), type: "sugestão", description: "Instalar bicicletário na área comum.", status: "resolved", response: "Sugestão anotada para próxima assembleia.", residentName: "Fernanda Inquilina", residentEmail: "fernanda.inq@email.com", condominium: "Plaza das Flores IV", unit: "A/102", assignedTo: "Síndico Principal", ticketId: 101 },
+    { id: 3, date: new Date(2024, 6, 18), type: "elogio", description: "Parabéns pela organização da festa junina!", status: "archived", residentName: "Roberto Proprietário", residentEmail: "roberto.prop@email.com", condominium: "Plaza das Flores III", unit: "B/201", assignedTo: "Admin Auxiliar"},
+    { id: 4, date: new Date(2024, 6, 25), type: "reclamação", description: "Lixo acumulado próximo ao bloco C.", status: "in_progress", residentName: "Juliana Proprietária", residentEmail: "juliana.prop@email.com", condominium: "Plaza das Flores III", unit: "B/202", assignedTo: "Supervisor Predial", ticketId: 102 },
 ];
 
 // Sample condo names (fetch dynamically)
@@ -47,7 +51,8 @@ const adminUsers = ["Síndico Principal", "Admin Auxiliar", "Supervisor Predial"
 export default function AdminOccurrencesPage() {
     const [occurrences, setOccurrences] = useState<Occurrence[]>(initialOccurrences);
     const [selectedOccurrence, setSelectedOccurrence] = useState<Occurrence | null>(null);
-    const [responseText, setResponseText] = useState(''); // Maybe remove if using tickets only
+    // Response text is now handled within the ticket system
+    // const [responseText, setResponseText] = useState('');
     const [filterCondo, setFilterCondo] = useState<string>('all');
     const [filterStatus, setFilterStatus] = useState<string>('all');
     const [filterType, setFilterType] = useState<string>('all');
@@ -57,53 +62,43 @@ export default function AdminOccurrencesPage() {
 
      const handleOpenDetails = (occurrence: Occurrence) => {
         setSelectedOccurrence(occurrence);
-        setResponseText(occurrence.response || ''); // Pre-fill response if exists
+        // No need to pre-fill response text anymore
+        // setResponseText(occurrence.response || '');
     };
 
      const handleCloseDetails = () => {
         setSelectedOccurrence(null);
-        setResponseText('');
+        // setResponseText('');
     };
 
 
-     const handleSendResponse = async () => {
-        // This might be replaced by ticket reply functionality
-        if (!selectedOccurrence || !responseText.trim()) {
-            toast({ title: "Erro", description: "Digite uma resposta para a ocorrência.", variant: "destructive" });
-            return;
-        }
+     // Sending direct response is deprecated, use ticket reply instead.
+     // const handleSendResponse = async () => { ... }
 
-        // TODO: Implement actual submission logic (update occurrence status, potentially create/link ticket)
-        console.log(`Responding to occurrence ${selectedOccurrence.id}:`, responseText);
-         const updatedOccurrence = { ...selectedOccurrence, status: 'resolved' as const, response: responseText, assignedTo: selectedOccurrence.assignedTo ?? "Admin" }; // Assign if not already
 
-         setOccurrences(occurrences.map(o => o.id === selectedOccurrence.id ? updatedOccurrence : o));
-
-        toast({ title: "Sucesso", description: "Resposta enviada e ocorrência marcada como resolvida." });
-
-         // TODO: Notify resident (push/email) about the response/status change
-         // await sendEmail({ to: residentEmail, subject: `Resposta à sua ocorrência #${selectedOccurrence.id}`, body: responseText });
-
-        handleCloseDetails(); // Close dialog after sending
-    };
-
-     // TODO: Implement handleAssign function
      const handleAssign = async (occurrenceId: number, assignee: string) => {
+         // --- BACKEND NOTE ---
+         // Update the 'assignedTo' field and potentially the 'status' to 'in_progress' in the database.
+         // Use prepared statements to prevent SQL injection.
          console.log(`Assigning occurrence ${occurrenceId} to ${assignee}`);
-          // TODO: Update backend
          setOccurrences(occurrences.map(o => o.id === occurrenceId ? { ...o, assignedTo: assignee, status: o.status === 'pending' ? 'in_progress' : o.status } : o));
          toast({ title: "Sucesso", description: `Ocorrência #${occurrenceId} atribuída a ${assignee}.` });
-          // TODO: Notify assignee (push/email)?
+         // TODO: Notify assignee (push/email)?
      }
 
-     // TODO: Implement function to create/link ticket
+
       const handleCreateTicket = async (occurrenceId: number) => {
+          // --- BACKEND NOTE ---
+          // Create a new ticket record linked to this occurrence.
+          // Update the occurrence record with the new ticketId and potentially set status to 'in_progress'.
+          // Use prepared statements.
+          // Ensure the ticket subject/initial message reflects the occurrence details.
          console.log(`Creating ticket for occurrence ${occurrenceId}`);
-          // TODO: Call backend to create ticket and link it
          const newTicketId = Math.floor(Math.random() * 1000) + 100; // Simulate ticket ID
          setOccurrences(occurrences.map(o => o.id === occurrenceId ? { ...o, ticketId: newTicketId, status: 'in_progress' } : o));
          toast({ title: "Sucesso", description: `Ticket #${newTicketId} criado para a ocorrência #${occurrenceId}.` });
-          // Redirect to ticket page? router.push(`/admin/tickets/${newTicketId}`);
+          // Redirect to the new ticket page
+          // router.push(`/admin/tickets/${newTicketId}`);
           handleCloseDetails();
       }
 
@@ -145,7 +140,7 @@ export default function AdminOccurrencesPage() {
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold text-foreground">Gerenciar Ocorrências</h1>
-            <p className="text-muted-foreground">Visualize, atribua e responda às ocorrências (reclamações, elogios, sugestões) dos moradores.</p>
+            <p className="text-muted-foreground">Visualize, atribua e acompanhe as ocorrências (reclamações, elogios, sugestões) dos moradores via tickets.</p>
 
              {/* Filter Section */}
              <Card>
@@ -210,7 +205,7 @@ export default function AdminOccurrencesPage() {
                                              <div className="flex items-center gap-2">
                                                  {getTypeIcon(occurrence.type)}
                                                  <div>
-                                                    <p className="text-sm font-semibold capitalize">{occurrence.type}</p>
+                                                    <p className="text-sm font-semibold capitalize">{occurrence.type} #{occurrence.id}</p>
                                                     <CardDescription>
                                                          {occurrence.residentName} ({occurrence.unit}) - {occurrence.condominium}
                                                     </CardDescription>
@@ -225,16 +220,12 @@ export default function AdminOccurrencesPage() {
                                      </CardHeader>
                                      <CardContent className="p-4 pt-0">
                                          <p className="text-sm mb-2">{occurrence.description}</p>
-                                          {occurrence.response && (
-                                             <div className="mt-2 border-l-4 border-primary pl-3 py-1 bg-background">
-                                              <p className="text-sm font-semibold text-primary">Resposta:</p>
-                                              <p className="text-sm text-muted-foreground">{occurrence.response}</p>
-                                             </div>
-                                          )}
+                                          {/* Display last response/update from ticket system if needed */}
+                                          {/* {occurrence.response && ( ... )} */}
                                           {occurrence.ticketId && (
                                              <div className="mt-2">
                                                 <Button variant="link" size="sm" className="p-0 h-auto" asChild>
-                                                     {/* TODO: Link to actual ticket page */}
+                                                     {/* Link to actual ticket page */}
                                                      <a href={`/admin/tickets/${occurrence.ticketId}`}><Ticket className="mr-1 h-3 w-3"/> Ver Ticket #{occurrence.ticketId}</a>
                                                 </Button>
                                              </div>
@@ -247,7 +238,6 @@ export default function AdminOccurrencesPage() {
                                                     <Eye className="mr-2 h-4 w-4" /> Detalhes
                                                 </Button>
                                             </DialogTrigger>
-                                             {/* Keep content outside trigger if it depends on selectedOccurrence */}
                                              {selectedOccurrence && selectedOccurrence.id === occurrence.id && (
                                                 <DialogContent className="sm:max-w-lg">
                                                     <DialogHeader>
@@ -261,6 +251,7 @@ export default function AdminOccurrencesPage() {
                                                           {selectedOccurrence.photoUrl && (
                                                              <div>
                                                                  <p className="font-semibold mb-1">Foto Anexada:</p>
+                                                                  {/* --- SECURITY NOTE: Ensure photoUrl is from a trusted source and properly sanitized/validated on backend --- */}
                                                                   <Image
                                                                      src={selectedOccurrence.photoUrl}
                                                                      alt="Foto da Ocorrência"
@@ -269,10 +260,8 @@ export default function AdminOccurrencesPage() {
                                                                      className="rounded-md object-cover border"
                                                                      data-ai-hint="complaint issue photo"
                                                                   />
-                                                                 {/* Add download button for photo? */}
-                                                                 {/* <Button variant="link" size="sm" asChild>
-                                                                     <a href={selectedOccurrence.photoUrl} target="_blank" rel="noreferrer"><Download className="mr-1 h-3 w-3"/> Baixar Foto</a>
-                                                                 </Button> */}
+                                                                 {/* Download button might expose direct storage URLs, consider security implications */}
+                                                                 {/* <Button variant="link" size="sm" asChild><a href={selectedOccurrence.photoUrl} target="_blank" rel="noreferrer"><Download className="mr-1 h-3 w-3"/> Baixar Foto</a></Button> */}
                                                              </div>
                                                          )}
 
@@ -294,20 +283,7 @@ export default function AdminOccurrencesPage() {
                                                              </div>
                                                          )}
 
-                                                         {/* Response Area (Might be replaced by Tickets) */}
-                                                          {!selectedOccurrence.ticketId && (
-                                                            <div className="space-y-1.5">
-                                                                <Label htmlFor="response-text">Resposta Rápida (Opcional)</Label>
-                                                                <Textarea
-                                                                    id="response-text"
-                                                                    rows={3}
-                                                                    value={responseText}
-                                                                    onChange={(e) => setResponseText(e.target.value)}
-                                                                    placeholder={selectedOccurrence.status === 'resolved' ? "Resposta já enviada." : "Digite uma resposta rápida aqui..."}
-                                                                    readOnly={selectedOccurrence.status === 'resolved' || selectedOccurrence.status === 'archived'}
-                                                                />
-                                                            </div>
-                                                          )}
+                                                         {/* Direct Response Area Removed - Use Ticket System */}
                                                     </div>
                                                     <DialogFooter className="gap-2 flex-wrap justify-end">
                                                          <DialogClose asChild>
@@ -319,14 +295,14 @@ export default function AdminOccurrencesPage() {
                                                                <Ticket className="mr-2 h-4 w-4" /> Criar/Vincular Ticket
                                                             </Button>
                                                          )}
-                                                          {/* Send quick response button (if not using tickets exclusively) */}
-                                                          {!selectedOccurrence.ticketId && responseText.trim() && (selectedOccurrence.status === 'pending' || selectedOccurrence.status === 'in_progress') && (
-                                                            <Button type="button" onClick={handleSendResponse} disabled={!responseText.trim()}>
-                                                                Enviar Resposta e Resolver
+                                                          {/* Go to Ticket button if already exists */}
+                                                         {selectedOccurrence.ticketId && (
+                                                            <Button type="button" asChild>
+                                                                <a href={`/admin/tickets/${selectedOccurrence.ticketId}`}>
+                                                                    <Ticket className="mr-2 h-4 w-4"/> Abrir Ticket #{selectedOccurrence.ticketId}
+                                                                </a>
                                                             </Button>
                                                          )}
-                                                          {/* Add Archive button? */}
-                                                         {/* <Button type="button" variant="outline" onClick={handleArchiveComplaint}>Arquivar</Button> */}
                                                     </DialogFooter>
                                                 </DialogContent>
                                              )}

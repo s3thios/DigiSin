@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -7,11 +8,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
-import { MessageSquareQuote, CheckCircle, Clock, ThumbsUp, Lightbulb, Ticket } from 'lucide-react'; // Added icons
+import { MessageSquareQuote, CheckCircle, Clock, ThumbsUp, Lightbulb, Ticket } from 'lucide-react'; // Icons for types and status
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Added Select
 
 type OccurrenceStatus = 'pending' | 'in_progress' | 'resolved' | 'archived';
+// Updated OccurrenceType as requested
 type OccurrenceType = 'reclamação' | 'elogio' | 'sugestão';
 
 // Sample data for resident's occurrences - replace with actual data fetching
@@ -41,17 +43,33 @@ export default function OccurrencesPage() {
    const handlePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
        const file = event.target.files[0];
-       if (file.size > 5 * 1024 * 1024) { // 5MB limit
+       // --- SECURITY NOTE ---
+       // Image Validation (Client-side basic check, Backend MUST perform thorough validation)
+       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+       const maxSize = 5 * 1024 * 1024; // 5MB limit
+
+       if (!allowedTypes.includes(file.type)) {
+           toast({
+               title: "Erro",
+               description: "Tipo de arquivo inválido. Apenas JPG, PNG ou GIF são permitidos.",
+               variant: "destructive",
+           });
+           setOccurrencePhoto(null);
+           event.target.value = '';
+           return;
+       }
+
+       if (file.size > maxSize) {
          toast({
            title: "Erro",
            description: "A foto não pode exceder 5MB.",
            variant: "destructive",
          });
          setOccurrencePhoto(null);
-         event.target.value = ''; // Clear the input
-       } else {
-        setOccurrencePhoto(file);
+         event.target.value = '';
+         return;
        }
+       setOccurrencePhoto(file);
     }
   };
 
@@ -66,7 +84,19 @@ export default function OccurrencesPage() {
       return;
     }
 
-    // TODO: Implement actual submission logic (send to backend, upload photo if present)
+    // --- BACKEND NOTE ---
+    // Implement actual submission logic.
+    // 1. Validate input data rigorously (type, description length, etc.).
+    // 2. Use prepared statements to prevent SQL injection.
+    // 3. If photo exists:
+    //    - Validate MIME type, file extension, and binary content on the backend.
+    //    - Scan for malware.
+    //    - Store securely (e.g., Firebase Storage, S3) with a unique name.
+    //    - Store the photo URL/reference in the database, linked to the occurrence.
+    // 4. Create the occurrence record in the database.
+    // 5. Create a corresponding ticket in the ticketing system.
+    // 6. Notify relevant admin/sindico via push/email.
+
     console.log(`Submitting ${newOccurrenceType}:`, newOccurrenceDesc, occurrencePhoto?.name);
 
      // Simulate adding to list
@@ -78,13 +108,13 @@ export default function OccurrencesPage() {
          description: newOccurrenceDesc,
          status: 'pending',
          response: null,
+         // Simulate ticket creation link
+         ticketId: Math.floor(Math.random() * 1000) + 200,
      };
-     // Note: In a real app, you'd fetch the updated list or add optimistically
      initialOccurrences.unshift(newOccurrenceEntry); // Add to front (temporary simulation)
 
 
-     // TODO: Notify Admin/Sindico (push/email) about the new occurrence
-    toast({ title: "Sucesso", description: `Ocorrência (${newOccurrenceType}) registrada com sucesso.` });
+    toast({ title: "Sucesso", description: `Ocorrência (${newOccurrenceType}) registrada e ticket criado.` });
     setNewOccurrenceType(undefined);
     setNewOccurrenceDesc('');
     setOccurrencePhoto(null);
@@ -130,10 +160,10 @@ export default function OccurrencesPage() {
         <CardContent className="space-y-4">
           <div className="grid sm:grid-cols-2 gap-4">
              <div className="space-y-1.5">
-               <Label htmlFor="occurrence-type">Tipo de Ocorrência</Label>
+               <Label htmlFor="occurrence-type">Tipo de Ocorrência*</Label>
                <Select value={newOccurrenceType} onValueChange={(value) => setNewOccurrenceType(value as OccurrenceType)}>
                  <SelectTrigger id="occurrence-type">
-                   <SelectValue placeholder="Selecione Reclamação, Elogio ou Sugestão" />
+                   <SelectValue placeholder="Selecione o Tipo" />
                  </SelectTrigger>
                  <SelectContent>
                    <SelectItem value="reclamação">Reclamação</SelectItem>
@@ -144,12 +174,12 @@ export default function OccurrencesPage() {
              </div>
              <div className="space-y-1.5">
                 <Label htmlFor="occurrence-photo">Anexar Foto (Opcional - até 5MB)</Label>
-                <Input id="occurrence-photo" type="file" accept="image/*" onChange={handlePhotoChange} />
+                <Input id="occurrence-photo" type="file" accept="image/jpeg, image/png, image/gif" onChange={handlePhotoChange} />
                  {occurrencePhoto && <p className="text-xs text-muted-foreground">Arquivo selecionado: {occurrencePhoto.name}</p>}
              </div>
           </div>
           <div className="grid w-full gap-1.5">
-            <Label htmlFor="occurrence-description">Descrição</Label>
+            <Label htmlFor="occurrence-description">Descrição*</Label>
             <Textarea
               placeholder="Descreva a ocorrência..."
               id="occurrence-description"
@@ -182,21 +212,21 @@ export default function OccurrencesPage() {
                   </div>
                    <CardDescription>
                       Registrado em: {new Date(occurrence.date).toLocaleDateString('pt-BR')}
+                      {occurrence.ticketId && ` | Ticket: #${occurrence.ticketId}`}
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="p-4 pt-0">
                   <p className="text-sm mb-2">{occurrence.description}</p>
                   {occurrence.response && (
                      <div className="mt-2 border-l-4 border-primary pl-3 py-1 bg-background">
-                      <p className="text-sm font-semibold text-primary">Resposta da Administração:</p>
+                      <p className="text-sm font-semibold text-primary">Última Resposta:</p>
                       <p className="text-sm text-muted-foreground">{occurrence.response}</p>
                      </div>
                   )}
                   {occurrence.ticketId && (
                      <div className="mt-2">
                         <Button variant="link" size="sm" className="p-0 h-auto" asChild>
-                             {/* TODO: Link to actual resident ticket view page */}
-                             <a href={`/resident/tickets/${occurrence.ticketId}`}><Ticket className="mr-1 h-3 w-3"/> Ver Ticket #{occurrence.ticketId}</a>
+                             <a href={`/resident/tickets/${occurrence.ticketId}`}><Ticket className="mr-1 h-3 w-3"/> Ver Conversa no Ticket #{occurrence.ticketId}</a>
                         </Button>
                      </div>
                   )}

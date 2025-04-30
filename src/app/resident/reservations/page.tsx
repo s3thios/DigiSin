@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -14,7 +15,8 @@ import { generateBoleto } from '@/services/boleto';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Copy, Clock, Music } from 'lucide-react'; // Added Music icon
+import { Copy, Clock, Music } from 'lucide-react';
+import { notifyReservationPendingPayment, notifyReservationConfirmed } from '@/services/notifications'; // Placeholder imports
 
 type PaymentMethod = 'pix' | 'boleto';
 
@@ -26,8 +28,6 @@ interface PaymentResult {
 
 export default function ReservationsPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
-  // Time selection removed as it's full day now
-  // const [selectedTime, setSelectedTime] = useState<string | undefined>(undefined);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | undefined>(undefined);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
@@ -42,49 +42,71 @@ export default function ReservationsPage() {
   // TODO: Fetch fee from admin settings
   const partyHallFee = 150;
 
-  // Available times removed as it's full day
-  // const availableTimes = Array.from({ length: 15 }, (_, i) => {
-  //   const hour = 8 + i;
-  //   return `${hour.toString().padStart(2, '0')}:00`;
-  // });
-
   const handleDateSelect = (date: Date | undefined) => {
     setSelectedDate(date);
-    // setSelectedTime(undefined); // No longer needed
     setPaymentResult(null); // Reset payment result
   };
 
   const handleProofPhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
-       if (file.size > 5 * 1024 * 1024) { // 5MB limit
+      // --- SECURITY NOTE ---
+      // Image Validation (Client-side basic check, Backend MUST perform thorough validation)
+       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+       const maxSize = 5 * 1024 * 1024; // 5MB limit
+
+       if (!allowedTypes.includes(file.type)) {
+           toast({
+               title: "Erro",
+               description: "Tipo de arquivo inválido. Apenas JPG, PNG ou GIF são permitidos.",
+               variant: "destructive",
+           });
+           setProofPhoto(null);
+           event.target.value = '';
+           return;
+       }
+       if (file.size > maxSize) {
          toast({
            title: "Erro",
            description: "A foto de comprovante não pode exceder 5MB.",
            variant: "destructive",
          });
          setProofPhoto(null);
-         event.target.value = ''; // Clear the input
-       } else {
-         setProofPhoto(file);
+         event.target.value = '';
+         return;
        }
+       setProofPhoto(file);
     }
   };
 
   const handleDamagePhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
        const file = event.target.files[0];
-       if (file.size > 5 * 1024 * 1024) { // 5MB limit
+       // --- SECURITY NOTE --- (Same validation as proof photo)
+       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+       const maxSize = 5 * 1024 * 1024; // 5MB limit
+
+       if (!allowedTypes.includes(file.type)) {
+           toast({
+               title: "Erro",
+               description: "Tipo de arquivo inválido. Apenas JPG, PNG ou GIF são permitidos.",
+               variant: "destructive",
+           });
+           setDamagePhoto(null);
+           event.target.value = '';
+           return;
+       }
+       if (file.size > maxSize) {
          toast({
            title: "Erro",
            description: "A foto de dano não pode exceder 5MB.",
            variant: "destructive",
          });
          setDamagePhoto(null);
-         event.target.value = ''; // Clear the input
-       } else {
-        setDamagePhoto(file);
+         event.target.value = '';
+         return;
        }
+       setDamagePhoto(file);
     }
   };
 
@@ -93,42 +115,67 @@ export default function ReservationsPage() {
       toast({ title: "Erro", description: "Selecione uma foto para enviar.", variant: "destructive" });
       return;
     }
-    // TODO: Implement actual upload logic and notification
+    // --- BACKEND NOTE ---
+    // Implement actual upload logic.
+    // 1. Validate file on backend (MIME, size, content).
+    // 2. Store securely.
+    // 3. Link photo to the relevant reservation.
+    // 4. Notify admin/sindico.
+    // 5. Use prepared statements for database operations.
     console.log("Uploading proof photo:", proofPhoto.name);
-     // TODO: Notify admin (push/email)
      toast({ title: "Sucesso", description: "Foto de comprovante enviada." });
      setProofPhoto(null);
-     // Clear the file input if possible (depends on implementation)
+     // Clear the file input
+     const fileInput = document.getElementById('proof-picture') as HTMLInputElement;
+     if (fileInput) fileInput.value = '';
    };
 
    const handleReportDamage = async () => {
       if (!damagePhoto) {
-      toast({ title: "Erro", description: "Selecione uma foto do dano.", variant: "destructive" });
-      return;
-    }
+        toast({ title: "Erro", description: "Selecione uma foto do dano.", variant: "destructive" });
+        return;
+      }
      if (!damageDescription.trim()) {
         toast({ title: "Erro", description: "Descreva o dano encontrado.", variant: "destructive" });
         return;
      }
-    // TODO: Implement actual damage report logic (upload photo + description) and notification
+    // --- BACKEND NOTE ---
+    // Implement actual damage report logic.
+    // 1. Validate description (length, sanitize).
+    // 2. Validate photo on backend (MIME, size, content).
+    // 3. Store securely (description + photo URL).
+    // 4. Link report to the relevant reservation.
+    // 5. Create a ticket for the damage report.
+    // 6. Notify admin/sindico.
+    // 7. Use prepared statements for database operations.
     console.log("Reporting damage:", damagePhoto.name, damageDescription);
-     // TODO: Notify admin (push/email)
     toast({ title: "Sucesso", description: "Relato de dano enviado para análise." });
     setDamagePhoto(null);
     setDamageDescription('');
-    // Clear the file input if possible
+    // Clear the file input
+     const damageFileInput = document.getElementById('damage-picture') as HTMLInputElement;
+     if (damageFileInput) damageFileInput.value = '';
    }
 
 
   const handleGeneratePayment = async () => {
-    // Time selection removed
     if (!selectedDate || !paymentMethod) return;
 
     setIsGeneratingPayment(true);
     setPaymentResult(null);
 
+    // --- BACKEND NOTE ---
+    // 1. Before generating payment, check if the date is still available (prevent race conditions).
+    // 2. Create a 'pending' reservation record in the database.
+    // 3. Call the PIX/Boleto generation service (ensure these services are secure).
+    // 4. Store the payment code/details linked to the pending reservation.
+    // 5. Set an expiration time for the pending reservation.
+    // 6. Use prepared statements for all database interactions.
+
     try {
       const reservationDescription = `Reserva Salão ${format(selectedDate, 'dd/MM/yyyy')} (Dia Inteiro)`;
+      // TODO: Get resident details from auth context
+      const residentDetails = { email: 'residente@email.com', name: 'Nome Residente', cpf: '111.111.111-11' };
 
       if (paymentMethod === 'pix') {
         const result = await generatePixCode({
@@ -136,22 +183,26 @@ export default function ReservationsPage() {
           description: reservationDescription,
         });
         setPaymentResult({ code: result.pixCode, expiration: result.expiration });
-         // TODO: Notify resident (push/email) about pending payment
+        // Notify resident about pending payment
+        if (residentDetails.email) {
+            notifyReservationPendingPayment({ email: residentDetails.email }, selectedDate);
+        }
         toast({
           title: "Código PIX Gerado",
           description: "Copie o código e realize o pagamento.",
         });
       } else if (paymentMethod === 'boleto') {
-        // TODO: Get payer details (name, CPF) from logged-in user data
-        const payerDetails = { name: "Nome do Residente", cpf: "123.456.789-00" };
         const result = await generateBoleto({
           value: partyHallFee,
           description: reservationDescription,
-          payerName: payerDetails.name,
-          payerCPF: payerDetails.cpf,
+          payerName: residentDetails.name,
+          payerCPF: residentDetails.cpf,
         });
         setPaymentResult({ code: result.barcode, expiration: result.expiration, url: result.url });
-         // TODO: Notify resident (push/email) about pending payment
+         // Notify resident about pending payment
+         if (residentDetails.email) {
+             notifyReservationPendingPayment({ email: residentDetails.email }, selectedDate);
+         }
         toast({
           title: "Boleto Gerado",
           description: "Realize o pagamento do boleto.",
@@ -179,7 +230,7 @@ export default function ReservationsPage() {
     });
   };
 
-  // TODO: Implement rescheduling logic and fee calculation
+  // TODO: Implement rescheduling logic (check availability, apply fee, update backend)
   // TODO: Implement automatic confirmation after payment (requires webhook or polling) -> Notify Resident on confirm
 
   return (
@@ -191,7 +242,7 @@ export default function ReservationsPage() {
         <CardHeader>
           <CardTitle>Salão de Festas</CardTitle>
           <CardDescription>
-            Taxa de reserva: R$ {partyHallFee.toFixed(2)}. Horário: 08:00 - 22:00 (Dia inteiro). Som ambiente permitido.
+            Taxa de reserva: R$ {partyHallFee.toFixed(2)}. Horário: 08:00 às 22:00 (Dia inteiro). Som ambiente permitido.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-6 md:grid-cols-2">
@@ -201,24 +252,17 @@ export default function ReservationsPage() {
                 selected={selectedDate}
                 onSelect={handleDateSelect}
                 disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))} // Disable past dates
+                // TODO: Fetch and disable already booked dates from backend
                 locale={ptBR}
                 className="rounded-md border"
              />
              {selectedDate && (
                <p className="mt-2 text-sm text-muted-foreground">
-                 Data selecionada: {format(selectedDate, 'PPP', { locale: ptBR })}
+                 Data selecionada: {format(selectedDate, 'PPP', { locale: ptBR })} (Dia inteiro)
                </p>
              )}
           </div>
           <div className="space-y-4">
-            {/* Time Select Removed */}
-             {/* <Label htmlFor="time-select">Selecione o Horário</Label>
-             <Select
-                value={selectedTime}
-                onValueChange={setSelectedTime}
-                disabled={!selectedDate}
-             > ... </Select> */}
-
              {selectedDate && (
                 <AlertDialog open={isConfirming} onOpenChange={setIsConfirming}>
                   <AlertDialogTrigger asChild>
@@ -230,10 +274,9 @@ export default function ReservationsPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Confirmar Reserva</AlertDialogTitle>
                       <AlertDialogDescription>
-                        Você confirma a reserva do Salão de Festas para o dia inteiro em{' '}
-                        {selectedDate ? format(selectedDate, 'dd/MM/yyyy') : ''}?
-                        O valor da taxa é R$ {partyHallFee.toFixed(2)}.
-                        Selecione o método de pagamento abaixo.
+                        Você confirma a reserva do Salão de Festas para o dia{' '}
+                        <span className="font-semibold">{selectedDate ? format(selectedDate, 'dd/MM/yyyy') : ''}</span> (das 08:00 às 22:00)?
+                        O valor da taxa é R$ {partyHallFee.toFixed(2)}. Selecione o método de pagamento.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                      <div className="flex flex-col space-y-2 my-4">
@@ -275,6 +318,7 @@ export default function ReservationsPage() {
                       </div>
                      {paymentMethod === 'boleto' && paymentResult.url && (
                         <Button variant="link" asChild className="mt-2 p-0 h-auto">
+                           {/* --- SECURITY NOTE: Ensure boleto URL is from trusted source --- */}
                            <a href={paymentResult.url} target="_blank" rel="noopener noreferrer">
                            Visualizar Boleto
                            </a>
@@ -290,9 +334,9 @@ export default function ReservationsPage() {
           </div>
         </CardContent>
         <CardFooter className="text-sm text-muted-foreground flex flex-col items-start gap-1">
-            <div className="flex items-center gap-1"><Clock className="h-3 w-3" /> Horário: 08:00 - 22:00</div>
+            <div className="flex items-center gap-1"><Clock className="h-3 w-3" /> Horário: 08:00 às 22:00</div>
             <div className="flex items-center gap-1"><Music className="h-3 w-3" /> Som ambiente permitido.</div>
-            <div>Nota: Taxas adicionais podem ser aplicadas em caso de reagendamento.</div>
+            <div>Nota: Taxas adicionais podem ser aplicadas em caso de reagendamento. Consulte o regulamento.</div>
         </CardFooter>
       </Card>
 
@@ -300,12 +344,12 @@ export default function ReservationsPage() {
       <Card>
          <CardHeader>
            <CardTitle>Comprovante Pós-Evento</CardTitle>
-           <CardDescription>Envie uma foto de como você deixou o Salão de Festas após o uso.</CardDescription>
+           <CardDescription>Após o uso, envie uma foto mostrando como o Salão de Festas foi deixado.</CardDescription>
          </CardHeader>
          <CardContent className="space-y-4">
             <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="proof-picture">Foto do Local (até 5MB)</Label>
-              <Input id="proof-picture" type="file" accept="image/*" onChange={handleProofPhotoChange} />
+              <Label htmlFor="proof-picture">Foto do Local (JPG, PNG, GIF - até 5MB)</Label>
+              <Input id="proof-picture" type="file" accept="image/jpeg, image/png, image/gif" onChange={handleProofPhotoChange} />
               {proofPhoto && <p className="text-xs text-muted-foreground">Arquivo selecionado: {proofPhoto.name}</p>}
             </div>
             <Button onClick={handleUploadProof} disabled={!proofPhoto}>Enviar Comprovante</Button>
@@ -316,12 +360,12 @@ export default function ReservationsPage() {
       <Card>
          <CardHeader>
            <CardTitle>Relatar Dano</CardTitle>
-           <CardDescription>Encontrou algum dano no Salão de Festas? Informe aqui.</CardDescription>
+           <CardDescription>Encontrou algum dano no Salão de Festas antes ou depois do seu evento? Informe aqui.</CardDescription>
          </CardHeader>
          <CardContent className="space-y-4">
             <div className="grid w-full max-w-sm items-center gap-1.5">
-              <Label htmlFor="damage-picture">Foto do Dano (até 5MB)</Label>
-              <Input id="damage-picture" type="file" accept="image/*" onChange={handleDamagePhotoChange} />
+              <Label htmlFor="damage-picture">Foto do Dano (JPG, PNG, GIF - até 5MB)</Label>
+              <Input id="damage-picture" type="file" accept="image/jpeg, image/png, image/gif" onChange={handleDamagePhotoChange} />
                {damagePhoto && <p className="text-xs text-muted-foreground">Arquivo selecionado: {damagePhoto.name}</p>}
             </div>
              <div className="grid w-full gap-1.5">
@@ -337,7 +381,7 @@ export default function ReservationsPage() {
          </CardContent>
       </Card>
 
-      {/* TODO: Add resident's reservation list */}
+      {/* TODO: Add resident's reservation list (fetching confirmed/pending reservations) */}
       {/* <Card>
         <CardHeader><CardTitle>Minhas Reservas</CardTitle></CardHeader>
         <CardContent>...</CardContent>

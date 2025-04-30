@@ -1,3 +1,6 @@
+
+'use client'; // Required for hooks like useSearchParams
+
 import React from 'react';
 import {
   Sidebar,
@@ -8,14 +11,15 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-  SidebarGroup,
-  SidebarGroupLabel,
+  // SidebarGroup, // Settings group removed for Sindico
+  // SidebarGroupLabel,
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, CalendarCheck, Ticket } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { useSearchParams } from 'next/navigation'; // Hook to get query params
 
 // TODO: Fetch sindico user data dynamically, including managed condos
 const sindicoUser = {
@@ -23,7 +27,6 @@ const sindicoUser = {
     role: "Síndico",
     avatarSrc: "https://picsum.photos/100/100?grayscale&random=10",
     avatarFallback: "SI",
-    // managedCondos: ["Plaza das Flores IV"], // Example
 };
 
 export default function SindicoLayout({
@@ -31,6 +34,11 @@ export default function SindicoLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const searchParams = useSearchParams();
+  // Get condoId from URL to add to sidebar links if present
+  const currentCondoId = searchParams.get('condoId');
+  const condoQueryParam = currentCondoId ? `?condoId=${currentCondoId}` : '';
+
   return (
     <div className="flex min-h-screen">
        <Sidebar collapsible="icon" variant="sidebar" className="border-r">
@@ -47,17 +55,18 @@ export default function SindicoLayout({
         <Separator />
         <SidebarContent className="flex-1 overflow-y-auto p-2">
           <SidebarMenu>
+            {/* Link to dashboard - includes condoId if available */}
             <SidebarMenuItem>
-              <Link href="/sindico/dashboard" legacyBehavior passHref>
+              <Link href={`/sindico/dashboard${condoQueryParam}`} legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Painel do Condomínio">
                   <LayoutDashboard />
                   <span>Painel</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-            {/* TODO: Conditionally show links based on sindico permissions */}
+            {/* Other links also include condoId if available */}
              <SidebarMenuItem>
-              <Link href="/sindico/residents" legacyBehavior passHref>
+              <Link href={`/sindico/residents${condoQueryParam}`} legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Moradores">
                   <Users />
                   <span>Moradores</span>
@@ -65,7 +74,7 @@ export default function SindicoLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/sindico/announcements" legacyBehavior passHref>
+              <Link href={`/sindico/announcements${condoQueryParam}`} legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Avisos">
                   <Bell />
                   <span>Avisos</span>
@@ -73,7 +82,7 @@ export default function SindicoLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/sindico/regulations" legacyBehavior passHref>
+              <Link href={`/sindico/regulations${condoQueryParam}`} legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Regulamento">
                   <FileText />
                   <span>Regulamento</span>
@@ -81,7 +90,7 @@ export default function SindicoLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/sindico/complaints" legacyBehavior passHref>
+              <Link href={`/sindico/complaints${condoQueryParam}`} legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Ocorrências">
                   <MessageSquareQuote />
                   <span>Ocorrências</span>
@@ -89,7 +98,7 @@ export default function SindicoLayout({
               </Link>
             </SidebarMenuItem>
              <SidebarMenuItem>
-              <Link href="/sindico/tickets" legacyBehavior passHref>
+              <Link href={`/sindico/tickets${condoQueryParam}`} legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Tickets">
                   <Ticket />
                   <span>Tickets</span>
@@ -97,7 +106,7 @@ export default function SindicoLayout({
               </Link>
             </SidebarMenuItem>
               <SidebarMenuItem>
-              <Link href="/sindico/reservations" legacyBehavior passHref>
+              <Link href={`/sindico/reservations${condoQueryParam}`} legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservas">
                   <CalendarCheck />
                   <span>Reservas</span>
@@ -106,36 +115,16 @@ export default function SindicoLayout({
             </SidebarMenuItem>
           </SidebarMenu>
 
-           {/* Maybe remove or restrict settings for Sindico */}
-           {/* <SidebarGroup className="mt-4">
-              <SidebarGroupLabel>Configurações</SidebarGroupLabel>
-              <SidebarMenu>
-                   <SidebarMenuItem>
-                       <Link href="/sindico/settings/fees" legacyBehavior passHref>
-                          <SidebarMenuButton tooltip="Taxas">
-                              <DollarSign />
-                              <span>Taxas</span>
-                          </SidebarMenuButton>
-                      </Link>
-                   </SidebarMenuItem>
-              </SidebarMenu>
-          </SidebarGroup> */}
+           {/* Settings Group Removed for Sindico */}
 
         </SidebarContent>
          <Separator />
         <SidebarFooter className="p-2">
            <SidebarMenu>
-             {/* <SidebarMenuItem>
-               <Link href="/sindico/settings" legacyBehavior passHref>
-                  <SidebarMenuButton tooltip="Configurações">
-                    <Settings />
-                     <span>Configurações</span>
-                  </SidebarMenuButton>
-               </Link>
-            </SidebarMenuItem> */}
+             {/* Settings link removed for Sindico */}
             <SidebarMenuItem>
-              {/* TODO: Add logout functionality here */}
-              <Link href="/login" passHref> {/* Redirect to login on logout */}
+              {/* TODO: Implement secure logout functionality */}
+              <Link href="/login" passHref>
                   <SidebarMenuButton tooltip="Sair">
                     <LogOut />
                     <span>Sair</span>
@@ -147,8 +136,8 @@ export default function SindicoLayout({
       </Sidebar>
       <SidebarInset className="flex-1 p-4 md:p-6 bg-background">
         <div className="flex items-center justify-between mb-6">
-           <SidebarTrigger className="md:hidden" /> {/* Only show trigger on mobile */}
-           {/* TODO: Add condo switcher or breadcrumbs */}
+           <SidebarTrigger className="md:hidden" />
+           {/* TODO: Add breadcrumbs or condo name display */}
         </div>
         {children}
       </SidebarInset>
