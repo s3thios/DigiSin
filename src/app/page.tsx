@@ -1,3 +1,7 @@
+import { redirect } from 'next/navigation';
+
 export default function Home() {
-  return <></>;
+  // For now, redirect to the resident dashboard.
+  // Authentication logic will be added later.
+  redirect('/resident/dashboard');
 }
