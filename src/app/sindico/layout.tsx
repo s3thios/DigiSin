@@ -11,12 +11,12 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarTrigger,
-  // SidebarGroup, // Settings group removed for Sindico
-  // SidebarGroupLabel,
+  SidebarGroup, // Added Group back for potential structure
+  SidebarGroupLabel, // Added GroupLabel back
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, CalendarCheck, Ticket } from 'lucide-react';
+import { LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, CalendarCheck, Ticket, UserCog, UserPlus, Briefcase } from 'lucide-react'; // Added UserCog, UserPlus, Briefcase
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { useSearchParams } from 'next/navigation'; // Hook to get query params
@@ -54,68 +54,107 @@ export default function SindicoLayout({
         </SidebarHeader>
         <Separator />
         <SidebarContent className="flex-1 overflow-y-auto p-2">
-          <SidebarMenu>
-            {/* Link to dashboard - includes condoId if available */}
-            <SidebarMenuItem>
-              <Link href={`/sindico/dashboard${condoQueryParam}`} legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Painel do Condomínio">
-                  <LayoutDashboard />
-                  <span>Painel</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-            {/* Other links also include condoId if available */}
+          {/* Dashboard link always available, might or might not have condoId */}
+           <SidebarMenu>
              <SidebarMenuItem>
-              <Link href={`/sindico/residents${condoQueryParam}`} legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Moradores">
-                  <Users />
-                  <span>Moradores</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <Link href={`/sindico/announcements${condoQueryParam}`} legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Avisos">
-                  <Bell />
-                  <span>Avisos</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <Link href={`/sindico/regulations${condoQueryParam}`} legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Regulamento">
-                  <FileText />
-                  <span>Regulamento</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <Link href={`/sindico/complaints${condoQueryParam}`} legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Ocorrências">
-                  <MessageSquareQuote />
-                  <span>Ocorrências</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-             <SidebarMenuItem>
-              <Link href={`/sindico/tickets${condoQueryParam}`} legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Tickets">
-                  <Ticket />
-                  <span>Tickets</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-              <SidebarMenuItem>
-              <Link href={`/sindico/reservations${condoQueryParam}`} legacyBehavior passHref>
-                <SidebarMenuButton tooltip="Reservas">
-                  <CalendarCheck />
-                  <span>Reservas</span>
-                </SidebarMenuButton>
-              </Link>
-            </SidebarMenuItem>
-          </SidebarMenu>
+               <Link href={`/sindico/dashboard${condoQueryParam}`} legacyBehavior passHref>
+                 <SidebarMenuButton tooltip="Painel do Condomínio">
+                   <LayoutDashboard />
+                   <span>Painel</span>
+                 </SidebarMenuButton>
+               </Link>
+             </SidebarMenuItem>
+           </SidebarMenu>
 
-           {/* Settings Group Removed for Sindico */}
+          {/* Condominium Management (General, no condoId needed) */}
+           <SidebarGroup className="mt-4">
+                <SidebarGroupLabel>Administração</SidebarGroupLabel>
+                <SidebarMenu>
+                   <SidebarMenuItem>
+                      <Link href="/sindico/condominiums" legacyBehavior passHref>
+                         <SidebarMenuButton tooltip="Gerenciar Condomínios">
+                              <Building />
+                              <span>Condomínios</span>
+                         </SidebarMenuButton>
+                      </Link>
+                   </SidebarMenuItem>
+                </SidebarMenu>
+           </SidebarGroup>
+
+
+          {/* Links specific to the selected Condominium (only show if condoId is present) */}
+          {currentCondoId && (
+            <SidebarGroup className="mt-4">
+                <SidebarGroupLabel>Condomínio Ativo</SidebarGroupLabel>
+                 <SidebarMenu>
+                   <SidebarMenuItem>
+                    <Link href={`/sindico/residents${condoQueryParam}`} legacyBehavior passHref>
+                      <SidebarMenuButton tooltip="Moradores">
+                        <Users />
+                        <span>Moradores</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                   <SidebarMenuItem>
+                      <Link href={`/sindico/council${condoQueryParam}`} legacyBehavior passHref>
+                         <SidebarMenuButton tooltip="Conselho">
+                              <UserCog />
+                              <span>Conselho</span>
+                         </SidebarMenuButton>
+                      </Link>
+                   </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <Link href={`/sindico/employees${condoQueryParam}`} legacyBehavior passHref>
+                         <SidebarMenuButton tooltip="Funcionários">
+                              <Briefcase />
+                              <span>Funcionários</span>
+                         </SidebarMenuButton>
+                      </Link>
+                   </SidebarMenuItem>
+                   <SidebarMenuItem>
+                    <Link href={`/sindico/announcements${condoQueryParam}`} legacyBehavior passHref>
+                      <SidebarMenuButton tooltip="Avisos">
+                        <Bell />
+                        <span>Avisos</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                   <SidebarMenuItem>
+                    <Link href={`/sindico/regulations${condoQueryParam}`} legacyBehavior passHref>
+                      <SidebarMenuButton tooltip="Regulamento">
+                        <FileText />
+                        <span>Regulamento</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                   <SidebarMenuItem>
+                    <Link href={`/sindico/complaints${condoQueryParam}`} legacyBehavior passHref>
+                      <SidebarMenuButton tooltip="Ocorrências">
+                        <MessageSquareQuote />
+                        <span>Ocorrências</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                   <SidebarMenuItem>
+                    <Link href={`/sindico/tickets${condoQueryParam}`} legacyBehavior passHref>
+                      <SidebarMenuButton tooltip="Tickets">
+                        <Ticket />
+                        <span>Tickets</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                    <SidebarMenuItem>
+                    <Link href={`/sindico/reservations${condoQueryParam}`} legacyBehavior passHref>
+                      <SidebarMenuButton tooltip="Reservas">
+                        <CalendarCheck />
+                        <span>Reservas</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+            </SidebarGroup>
+          )}
+
 
         </SidebarContent>
          <Separator />
