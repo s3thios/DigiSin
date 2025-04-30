@@ -85,17 +85,17 @@ export default function LoginPage() {
         // Implement rate limiting to prevent brute-force attacks.
         await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
 
-        // --- SIMULATED AUTH ---
+        // --- SIMULATED AUTH - UPDATED WITH TEST CREDENTIALS ---
         let loginSuccess = false;
         let redirectPath = '/';
 
-        if (type === 'resident' && identifier === '111.111.111-11' && password === 'senha123') {
+        if (type === 'resident' && identifier === '632.099.143-70' && password === 'senha098') {
             loginSuccess = true;
             redirectPath = '/resident/dashboard';
-        } else if (type === 'sindico' && identifier === '11.222.333/0001-44' && password === 'sindico123') {
+        } else if (type === 'sindico' && identifier === '11.222.333/0001-44' && password === 'senha890') {
             loginSuccess = true;
             redirectPath = '/sindico/dashboard';
-        } else if (type === 'admin' && identifier === '999.999.999-99' && password === 'admin123') {
+        } else if (type === 'admin' && identifier === '609.367.243-31' && password === 'senha123') {
             loginSuccess = true;
             redirectPath = '/admin/dashboard';
         }
