@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Sidebar,
@@ -13,7 +14,9 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, Utensils, MapPin, DollarSign, CalendarCheck, Ticket } from 'lucide-react'; // Added Ticket icon
+import {
+  LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, Ticket, CalendarCheck, Package // Added Package for deliveries
+} from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
@@ -35,7 +38,7 @@ export default function AdminLayout({
        <Sidebar collapsible="icon" variant="sidebar" className="border-r">
         <SidebarHeader className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10">
-              <AvatarImage src={user.avatarSrc} alt={`Foto de ${user.name}`} data-ai-hint="admin user avatar" />
+              <AvatarImage src={user.avatarSrc} alt={`Foto de ${user.name}`} data-ai-hint="admin user avatar" className="transition-transform duration-300 group-hover:scale-110"/>
               <AvatarFallback>{user.avatarFallback}</AvatarFallback>
           </Avatar>
            <div className="flex flex-col truncate">
@@ -46,7 +49,7 @@ export default function AdminLayout({
         <Separator />
         <SidebarContent className="flex-1 overflow-y-auto p-2">
           <SidebarMenu>
-            <SidebarMenuItem>
+            <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/dashboard" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Visão Geral">
                   <LayoutDashboard />
@@ -54,7 +57,7 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/condominiums" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Condomínios">
                   <Building />
@@ -62,7 +65,7 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+            <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/residents" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Moradores">
                   <Users />
@@ -70,7 +73,7 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/announcements" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Avisos">
                   <Bell />
@@ -78,7 +81,7 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/regulations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Regulamento">
                   <FileText />
@@ -86,7 +89,7 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/complaints" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Ocorrências">
                   <MessageSquareQuote />
@@ -94,7 +97,7 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/tickets" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Tickets">
                   <Ticket />
@@ -102,7 +105,7 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-              <SidebarMenuItem>
+              <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/admin/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservas">
                   <CalendarCheck />
@@ -110,12 +113,20 @@ export default function AdminLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+               <Link href="/admin/deliveries" legacyBehavior passHref>
+                 <SidebarMenuButton tooltip="Entregas">
+                   <Package />
+                   <span>Entregas</span>
+                 </SidebarMenuButton>
+               </Link>
+             </SidebarMenuItem>
           </SidebarMenu>
 
            <SidebarGroup className="mt-4">
               <SidebarGroupLabel>Configurações</SidebarGroupLabel>
               <SidebarMenu>
-                  <SidebarMenuItem>
+                  <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href="/admin/settings/fees" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Taxas">
                               <DollarSign />
@@ -123,8 +134,7 @@ export default function AdminLayout({
                           </SidebarMenuButton>
                       </Link>
                   </SidebarMenuItem>
-                   {/* Add other settings links here */}
-                   <SidebarMenuItem>
+                   <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                        <Link href="/admin/settings/users" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Usuários Admin">
                               <Users />
@@ -139,7 +149,7 @@ export default function AdminLayout({
          <Separator />
         <SidebarFooter className="p-2">
            <SidebarMenu>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                <Link href="/admin/settings" legacyBehavior passHref>
                   <SidebarMenuButton tooltip="Configurações Gerais">
                     <Settings />
@@ -147,9 +157,8 @@ export default function AdminLayout({
                   </SidebarMenuButton>
                </Link>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              {/* TODO: Add logout functionality here */}
-               <Link href="/login" passHref> {/* Redirect to login on logout */}
+            <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+               <Link href="/login" passHref>
                 <SidebarMenuButton tooltip="Sair">
                   <LogOut />
                   <span>Sair</span>
@@ -159,12 +168,13 @@ export default function AdminLayout({
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-      <SidebarInset className="flex-1 p-4 md:p-6 bg-background">
-        <div className="flex items-center justify-between mb-6">
-           <SidebarTrigger className="md:hidden" /> {/* Only show trigger on mobile */}
-           {/* TODO: Maybe add breadcrumbs or page title here */}
+      <SidebarInset className="flex-1 p-4 md:p-6 bg-background w-full">
+        <div className="flex items-center justify-between mb-6 md:hidden">
+           <SidebarTrigger />
         </div>
-        {children}
+         <div className="max-w-7xl mx-auto w-full">
+           {children}
+         </div>
       </SidebarInset>
     </div>
   );

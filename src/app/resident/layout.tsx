@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Sidebar,
@@ -13,7 +14,7 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { Home, Calendar, Bell, FileText, Settings, User, LogOut, Building, FileWarning, Utensils, Car, Bike, PawPrint, FileUp, FileImage, MessageSquareQuote, MapPin, Briefcase, Package, Phone, Ticket, Users } from 'lucide-react'; // Added Ticket and Users
+import { Home, Calendar, Bell, FileText, MessageSquareQuote, Ticket, Package, Users, Car, PawPrint, FileUp, Building, LogOut } from 'lucide-react'; // Updated icons
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 
@@ -35,7 +36,7 @@ export default function ResidentLayout({
        <Sidebar collapsible="icon" variant="sidebar" className="border-r">
         <SidebarHeader className="p-4 flex items-center gap-3">
           <Avatar className="h-10 w-10">
-              <AvatarImage src={residentUser.avatarSrc} alt={`Foto de ${residentUser.name}`} data-ai-hint="user avatar resident" />
+              <AvatarImage src={residentUser.avatarSrc} alt={`Foto de ${residentUser.name}`} data-ai-hint="user avatar resident" className="transition-transform duration-300 group-hover:scale-110" />
               <AvatarFallback>{residentUser.avatarFallback}</AvatarFallback>
           </Avatar>
            <div className="flex flex-col truncate">
@@ -46,7 +47,7 @@ export default function ResidentLayout({
         <Separator />
         <SidebarContent className="flex-1 overflow-y-auto p-2">
           <SidebarMenu>
-            <SidebarMenuItem>
+            <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/resident/dashboard" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Painel">
                   <Home />
@@ -54,7 +55,7 @@ export default function ResidentLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/resident/reservations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Reservas">
                   <Calendar />
@@ -62,7 +63,7 @@ export default function ResidentLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/resident/announcements" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Avisos">
                   <Bell />
@@ -70,7 +71,7 @@ export default function ResidentLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/resident/regulations" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Regulamento">
                   <FileText />
@@ -78,7 +79,7 @@ export default function ResidentLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-            <SidebarMenuItem>
+            <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/resident/complaints" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Ocorrências">
                   <MessageSquareQuote />
@@ -86,7 +87,7 @@ export default function ResidentLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
               <Link href="/resident/tickets" legacyBehavior passHref>
                 <SidebarMenuButton tooltip="Tickets">
                   <Ticket />
@@ -94,28 +95,28 @@ export default function ResidentLayout({
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
+             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+               <Link href="/resident/deliveries" legacyBehavior passHref>
+                 <SidebarMenuButton tooltip="Entregas">
+                   <Package />
+                   <span>Entregas</span>
+                 </SidebarMenuButton>
+               </Link>
+             </SidebarMenuItem>
           </SidebarMenu>
 
            <SidebarGroup className="mt-4">
               <SidebarGroupLabel>Gestão Pessoal</SidebarGroupLabel>
               <SidebarMenu>
-                  <SidebarMenuItem>
+                  <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href="/resident/profile" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Perfil">
-                              <User />
+                              <Users />
                               <span>Perfil</span>
                           </SidebarMenuButton>
                       </Link>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <Link href="/resident/visitors" legacyBehavior passHref>
-                          <SidebarMenuButton tooltip="Visitantes">
-                              <Users /> {/* Corrected */}
-                              <span>Visitantes</span>
-                          </SidebarMenuButton>
-                      </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
+                  <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href="/resident/vehicles" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Veículos">
                               <Car />
@@ -123,7 +124,7 @@ export default function ResidentLayout({
                           </SidebarMenuButton>
                       </Link>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
+                  <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href="/resident/pets" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Pets">
                               <PawPrint />
@@ -131,7 +132,7 @@ export default function ResidentLayout({
                           </SidebarMenuButton>
                       </Link>
                   </SidebarMenuItem>
-                    <SidebarMenuItem>
+                    <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href="/resident/documents" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Documentos">
                               <FileUp />
@@ -145,27 +146,11 @@ export default function ResidentLayout({
           <SidebarGroup className="mt-4">
               <SidebarGroupLabel>Comunidade</SidebarGroupLabel>
                 <SidebarMenu>
-                    <SidebarMenuItem>
+                    <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href="/resident/neighbors" legacyBehavior passHref>
                           <SidebarMenuButton tooltip="Vizinhos">
                               <Building />
                               <span>Vizinhos</span>
-                          </SidebarMenuButton>
-                      </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <Link href="/resident/marketplace" legacyBehavior passHref>
-                          <SidebarMenuButton tooltip="Classificados">
-                              <Briefcase />
-                              <span>Classificados</span> {/* Renamed from Anunciar */}
-                          </SidebarMenuButton>
-                      </Link>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
-                      <Link href="/resident/contact" legacyBehavior passHref>
-                          <SidebarMenuButton tooltip="Contatos Úteis">
-                              <Phone />
-                              <span>Contatos Úteis</span>
                           </SidebarMenuButton>
                       </Link>
                   </SidebarMenuItem>
@@ -177,15 +162,8 @@ export default function ResidentLayout({
          <Separator />
         <SidebarFooter className="p-2">
            <SidebarMenu>
-             {/* <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Configurações">
-                <Settings />
-                 <span>Configurações</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem> */}
-            <SidebarMenuItem>
-              {/* TODO: Add logout functionality here */}
-               <Link href="/login" passHref> {/* Redirect to login on logout */}
+            <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+               <Link href="/login" passHref>
                   <SidebarMenuButton tooltip="Sair">
                     <LogOut />
                     <span>Sair</span>
@@ -195,13 +173,10 @@ export default function ResidentLayout({
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
-       {/* Removed flex-1 to allow centering or other alignment strategies */}
-       <SidebarInset className="p-4 md:p-6 bg-background w-full"> {/* Added w-full */}
-        <div className="flex items-center justify-between mb-6 md:hidden"> {/* Adjusted margin for mobile */}
-           <SidebarTrigger /> {/* Show trigger on mobile */}
-           {/* Maybe add breadcrumbs or page title here */}
+       <SidebarInset className="flex-1 p-4 md:p-6 bg-background w-full">
+        <div className="flex items-center justify-between mb-6 md:hidden">
+           <SidebarTrigger />
         </div>
-         {/* Max-width container for centering content */}
          <div className="max-w-7xl mx-auto w-full">
              {children}
          </div>

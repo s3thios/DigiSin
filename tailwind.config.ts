@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -82,11 +83,18 @@ export default {
   				to: {
   					height: '0'
   				}
-  			}
+  			},
+            // Added smoother pulse animation
+             'pulse-subtle': {
+                 '50%': {
+                     opacity: '.65',
+                 },
+            },
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+            'pulse': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite', // Overwrite default pulse
   		}
   	}
   },

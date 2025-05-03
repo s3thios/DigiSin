@@ -1,5 +1,6 @@
+
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Users, Building, Bell, MessageSquareQuote, CalendarCheck, DollarSign } from 'lucide-react';
+import { Users, Building, Bell, MessageSquareQuote, CalendarCheck, Package } from 'lucide-react'; // Added Package icon
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -9,6 +10,7 @@ const globalSummary = {
     totalResidents: 500, // Example
     pendingOccurrences: 5, // Example (across all condos)
     pendingReservations: 3, // Example (awaiting payment confirmation)
+    pendingDeliveries: 12, // Example: Deliveries awaiting pickup
 };
 
 
@@ -24,7 +26,7 @@ export default function AdminDashboardPage() {
       <p className="text-muted-foreground">Visão geral da gestão de todos os condomínios.</p>
 
        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Condomínios</CardTitle>
             <Building className="h-4 w-4 text-muted-foreground" />
@@ -39,7 +41,7 @@ export default function AdminDashboardPage() {
             </Button>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Moradores</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -54,7 +56,7 @@ export default function AdminDashboardPage() {
             </Button>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ocorrências Pendentes</CardTitle>
             <MessageSquareQuote className="h-4 w-4 text-muted-foreground" />
@@ -65,11 +67,11 @@ export default function AdminDashboardPage() {
              Aguardando resposta/ação
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                <Link href="/admin/complaints">Ver Ocorrências</Link> {/* Updated link name */}
+                <Link href="/admin/complaints">Ver Ocorrências</Link>
             </Button>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Reservas Pendentes</CardTitle>
             <CalendarCheck className="h-4 w-4 text-muted-foreground" />
@@ -81,6 +83,21 @@ export default function AdminDashboardPage() {
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
                 <Link href="/admin/reservations">Gerenciar Reservas</Link>
+            </Button>
+          </CardContent>
+        </Card>
+         <Card className="hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Entregas Pendentes</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{globalSummary.pendingDeliveries}</div>
+            <p className="text-xs text-muted-foreground">
+              Aguardando retirada pelo morador
+            </p>
+             <Button variant="link" className="p-0 h-auto mt-2" asChild>
+                <Link href="/admin/deliveries">Gerenciar Entregas</Link>
             </Button>
           </CardContent>
         </Card>
@@ -99,6 +116,9 @@ export default function AdminDashboardPage() {
             </Button>
              <Button variant="outline" asChild>
                 <Link href="/admin/condominiums">Adicionar Condomínio</Link>
+            </Button>
+             <Button variant="outline" asChild>
+                <Link href="/admin/deliveries?action=register">Registrar Entrega</Link>
             </Button>
               <Button variant="outline" asChild>
                 <Link href="/admin/tickets">Ver Tickets</Link>

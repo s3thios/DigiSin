@@ -3,12 +3,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Users, Bell, MessageSquareQuote, CalendarCheck } from 'lucide-react';
+import { Users, Bell, MessageSquareQuote, CalendarCheck, Package } from 'lucide-react'; // Added Package
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // For Condo Switcher
 import { Label } from '@/components/ui/label';
 import { useRouter, useSearchParams } from 'next/navigation'; // To manage query params
+import { Skeleton } from '@/components/ui/skeleton'; // Import Skeleton
 
 // TODO: Fetch the list of condos managed by this specific Sindico from the backend
 const fetchManagedCondos = async (): Promise<{ id: number; name: string }[]> => {
@@ -33,6 +34,7 @@ const fetchCondoSummary = async (condoId: number) => {
             pendingOccurrences: 2,
             pendingReservations: 1,
             unreadAnnouncements: 1,
+            pendingDeliveries: 5, // Example
         };
     } else if (condoId === 2) { // PF III
          return {
@@ -40,6 +42,7 @@ const fetchCondoSummary = async (condoId: number) => {
             pendingOccurrences: 1,
             pendingReservations: 0,
             unreadAnnouncements: 3,
+            pendingDeliveries: 2, // Example
         };
     }
     // Default empty summary
@@ -48,6 +51,7 @@ const fetchCondoSummary = async (condoId: number) => {
         pendingOccurrences: 0,
         pendingReservations: 0,
         unreadAnnouncements: 0,
+        pendingDeliveries: 0,
     };
 };
 
@@ -56,6 +60,7 @@ interface CondoSummary {
     pendingOccurrences: number;
     pendingReservations: number;
     unreadAnnouncements: number;
+    pendingDeliveries: number; // Added deliveries
 }
 
 export default function SindicoDashboardPage() {
@@ -70,25 +75,34 @@ export default function SindicoDashboardPage() {
   useEffect(() => {
     const initializeDashboard = async () => {
       setIsLoading(true);
-      const condos = await fetchManagedCondos();
-      setManagedCondos(condos);
+      try {
+        const condos = await fetchManagedCondos();
+        setManagedCondos(condos);
 
-      const queryCondoId = searchParams.get('condoId');
-      let currentCondoId = queryCondoId ? parseInt(queryCondoId, 10) : condos[0]?.id;
+        const queryCondoId = searchParams.get('condoId');
+        let currentCondoId = queryCondoId ? parseInt(queryCondoId, 10) : condos[0]?.id;
 
-      if (currentCondoId && condos.some(c => c.id === currentCondoId)) {
-        setSelectedCondoId(currentCondoId);
-        const fetchedSummary = await fetchCondoSummary(currentCondoId);
-        setSummary(fetchedSummary);
-      } else if (condos.length > 0) {
-          // If query param is invalid or missing, default to the first condo
-          currentCondoId = condos[0].id;
+        if (currentCondoId && condos.some(c => c.id === currentCondoId)) {
           setSelectedCondoId(currentCondoId);
-          router.replace(`/sindico/dashboard?condoId=${currentCondoId}`); // Update URL
           const fetchedSummary = await fetchCondoSummary(currentCondoId);
           setSummary(fetchedSummary);
+        } else if (condos.length > 0) {
+            // If query param is invalid or missing, default to the first condo
+            currentCondoId = condos[0].id;
+            setSelectedCondoId(currentCondoId);
+            router.replace(`/sindico/dashboard?condoId=${currentCondoId}`); // Update URL
+            const fetchedSummary = await fetchCondoSummary(currentCondoId);
+            setSummary(fetchedSummary);
+        } else {
+          // No condos managed
+           setSummary(null);
+        }
+      } catch (error) {
+        console.error("Error initializing dashboard:", error);
+        setSummary(null); // Handle error state
+      } finally {
+         setIsLoading(false);
       }
-      setIsLoading(false);
     };
     initializeDashboard();
   }, [searchParams, router]); // Re-run if condoId in URL changes
@@ -96,24 +110,73 @@ export default function SindicoDashboardPage() {
 
   const handleCondoChange = async (value: string) => {
       const condoId = parseInt(value, 10);
-      if (condoId !== selectedCondoId) {
+      if (!isNaN(condoId) && condoId !== selectedCondoId) {
           setIsLoading(true);
+          setSummary(null); // Clear old summary while loading new one
           setSelectedCondoId(condoId);
           router.push(`/sindico/dashboard?condoId=${condoId}`); // Update URL to persist selection
-          const fetchedSummary = await fetchCondoSummary(condoId);
-          setSummary(fetchedSummary);
-          setIsLoading(false);
+          try {
+             const fetchedSummary = await fetchCondoSummary(condoId);
+             setSummary(fetchedSummary);
+          } catch (error) {
+              console.error("Error fetching summary on change:", error);
+              setSummary(null); // Handle error state
+          } finally {
+             setIsLoading(false);
+          }
       }
   };
 
   const selectedCondoName = managedCondos.find(c => c.id === selectedCondoId)?.name || "Nenhum";
 
+  const renderSkeletonCard = () => (
+     <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <Skeleton className="h-4 w-2/5" />
+          <Skeleton className="h-4 w-4" />
+        </CardHeader>
+        <CardContent>
+          <Skeleton className="h-8 w-1/4 mb-2" />
+          <Skeleton className="h-3 w-4/5" />
+          <Skeleton className="h-4 w-1/3 mt-3" />
+        </CardContent>
+     </Card>
+  );
+
   if (isLoading && !summary) {
       return (
           <div className="space-y-6">
-              <h1 className="text-3xl font-bold text-foreground">Painel do Síndico</h1>
-              <p className="text-muted-foreground">Carregando dados...</p>
-              {/* Add skeleton loaders here */}
+              <div className="flex flex-wrap justify-between items-center gap-4">
+                  <div>
+                      <Skeleton className="h-8 w-60 mb-2" />
+                      <Skeleton className="h-4 w-80" />
+                  </div>
+                  {managedCondos.length > 1 && (
+                       <div className="min-w-[200px] space-y-1.5">
+                          <Skeleton className="h-4 w-32 mb-1" />
+                          <Skeleton className="h-10 w-full" />
+                       </div>
+                   )}
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  {renderSkeletonCard()}
+                  {renderSkeletonCard()}
+                  {renderSkeletonCard()}
+                  {renderSkeletonCard()}
+              </div>
+               <Card>
+                  <CardHeader>
+                      <Skeleton className="h-6 w-40" />
+                  </CardHeader>
+                  <CardContent className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                  </CardContent>
+              </Card>
           </div>
       );
   }
@@ -122,8 +185,8 @@ export default function SindicoDashboardPage() {
       return (
           <div className="space-y-6">
               <h1 className="text-3xl font-bold text-foreground">Painel do Síndico</h1>
-              <p className="text-destructive">Você não gerencia nenhum condomínio ou ocorreu um erro.</p>
-              {/* Optionally add a link to contact support or admin */}
+              <p className="text-destructive">Você não gerencia nenhum condomínio ou ocorreu um erro ao carregar os dados.</p>
+               <Button asChild><Link href="/sindico/condominiums">Gerenciar Condomínios</Link></Button>
           </div>
       );
   }
@@ -153,8 +216,8 @@ export default function SindicoDashboardPage() {
       </div>
 
 
-       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5"> {/* Adjusted grid for 5 cards */}
+        <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Moradores</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
@@ -165,12 +228,11 @@ export default function SindicoDashboardPage() {
               Moradores neste condomínio
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                {/* Pass condo ID to linked page */}
                 <Link href={`/sindico/residents?condoId=${selectedCondoId}`}>Ver Moradores</Link>
             </Button>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ocorrências Pendentes</CardTitle>
             <MessageSquareQuote className="h-4 w-4 text-muted-foreground" />
@@ -181,12 +243,11 @@ export default function SindicoDashboardPage() {
              Aguardando resposta/ação
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                 {/* Pass condo ID to linked page */}
                 <Link href={`/sindico/complaints?condoId=${selectedCondoId}`}>Ver Ocorrências</Link>
             </Button>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Reservas Pendentes</CardTitle>
             <CalendarCheck className="h-4 w-4 text-muted-foreground" />
@@ -197,12 +258,26 @@ export default function SindicoDashboardPage() {
               Aguardando confirmação de pagamento
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                 {/* Pass condo ID to linked page */}
                 <Link href={`/sindico/reservations?condoId=${selectedCondoId}`}>Gerenciar Reservas</Link>
             </Button>
           </CardContent>
         </Card>
-         <Card>
+         <Card className="hover:shadow-md transition-shadow duration-200">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Entregas Pendentes</CardTitle>
+            <Package className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{summary.pendingDeliveries}</div>
+             <p className="text-xs text-muted-foreground">
+              Aguardando retirada
+            </p>
+             <Button variant="link" className="p-0 h-auto mt-2" asChild>
+                <Link href={`/sindico/deliveries?condoId=${selectedCondoId}`}>Gerenciar Entregas</Link>
+            </Button>
+          </CardContent>
+        </Card>
+         <Card className="hover:shadow-md transition-shadow duration-200">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avisos Recentes</CardTitle>
             <Bell className="h-4 w-4 text-muted-foreground" />
@@ -213,7 +288,6 @@ export default function SindicoDashboardPage() {
               Avisos não lidos/recentes
             </p>
              <Button variant="link" className="p-0 h-auto mt-2" asChild>
-                 {/* Pass condo ID to linked page */}
                 <Link href={`/sindico/announcements?condoId=${selectedCondoId}`}>Ver Avisos</Link>
             </Button>
           </CardContent>
@@ -224,7 +298,7 @@ export default function SindicoDashboardPage() {
         <CardHeader>
           <CardTitle>Ações Rápidas ({selectedCondoName})</CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+        <CardContent className="grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
              {/* Pass condo ID to linked pages */}
             <Button variant="outline" asChild>
                 <Link href={`/sindico/announcements?condoId=${selectedCondoId}&action=create`}>Criar Aviso</Link>
@@ -232,6 +306,9 @@ export default function SindicoDashboardPage() {
              <Button variant="outline" asChild>
                 <Link href={`/sindico/complaints?condoId=${selectedCondoId}`}>Ver Ocorrências</Link>
             </Button>
+             <Button variant="outline" asChild>
+                 <Link href={`/sindico/deliveries?condoId=${selectedCondoId}&action=register`}>Registrar Entrega</Link>
+             </Button>
              <Button variant="outline" asChild>
                 <Link href={`/sindico/tickets?condoId=${selectedCondoId}`}>Ver Tickets</Link>
             </Button>
