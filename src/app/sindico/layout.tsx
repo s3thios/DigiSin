@@ -18,7 +18,7 @@ import {
 import Link from 'next/link';
 import {
   LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, CalendarCheck, Ticket, UserCog, Briefcase,
-  Home, Calendar, FileUp, Car, PawPrint, Package // Added resident icons
+  Home, Calendar, FileUp, Car, PawPrint, Package, Scale, Clock, Wallet, Camera // Added Scale, Clock, Wallet, Camera
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -115,6 +115,22 @@ export default function SindicoLayout({
                           </SidebarMenuButton>
                         </Link>
                     </SidebarMenuItem>
+                     <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+                       <Link href={`/sindico/time-tracking${condoQueryParam}`} legacyBehavior passHref>
+                         <SidebarMenuButton tooltip="Ponto Eletrônico">
+                               <Clock />
+                               <span>Ponto</span>
+                         </SidebarMenuButton>
+                       </Link>
+                     </SidebarMenuItem>
+                      <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+                        <Link href={`/sindico/payroll${condoQueryParam}`} legacyBehavior passHref>
+                          <SidebarMenuButton tooltip="Folha de Pagamento">
+                                <Wallet />
+                                <span>Pagamentos</span>
+                          </SidebarMenuButton>
+                        </Link>
+                      </SidebarMenuItem>
                     <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href={`/sindico/announcements${condoQueryParam}`} legacyBehavior passHref>
                         <SidebarMenuButton tooltip="Avisos">
@@ -123,9 +139,18 @@ export default function SindicoLayout({
                         </SidebarMenuButton>
                       </Link>
                     </SidebarMenuItem>
+                     <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+                       <Link href={`/sindico/legal${condoQueryParam}`} legacyBehavior passHref>
+                         <SidebarMenuButton tooltip="Assuntos Legais">
+                               <Scale />
+                               <span>Legal</span>
+                         </SidebarMenuButton>
+                       </Link>
+                     </SidebarMenuItem>
+                     {/* Keep regulations link separate or remove if fully merged into /legal */}
                     <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
                       <Link href={`/sindico/regulations${condoQueryParam}`} legacyBehavior passHref>
-                        <SidebarMenuButton tooltip="Regulamento">
+                        <SidebarMenuButton tooltip="Regulamento (Upload)">
                           <FileText />
                           <span>Regulamento</span>
                         </SidebarMenuButton>
@@ -163,10 +188,19 @@ export default function SindicoLayout({
                          </SidebarMenuButton>
                        </Link>
                      </SidebarMenuItem>
+                      <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
+                        <Link href={`/sindico/cameras${condoQueryParam}`} legacyBehavior passHref>
+                          <SidebarMenuButton tooltip="Câmeras">
+                                <Camera />
+                                <span>Câmeras</span>
+                          </SidebarMenuButton>
+                        </Link>
+                      </SidebarMenuItem>
                   </SidebarMenu>
               </SidebarGroup>
 
-              {/* Section mirroring resident view */}
+              {/* Section mirroring resident view - Links removed as Sindico has direct management access */}
+              {/*
                <SidebarGroup className="mt-4">
                   <SidebarGroupLabel>Visão do Morador</SidebarGroupLabel>
                   <SidebarMenu>
@@ -178,41 +212,9 @@ export default function SindicoLayout({
                            </SidebarMenuButton>
                         </Link>
                      </SidebarMenuItem>
-                      <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
-                          <Link href={`/resident/reservations${condoQueryParam}`} legacyBehavior passHref>
-                             <SidebarMenuButton tooltip="Reservas (Morador)">
-                                <Calendar />
-                                <span>Reservas Morador</span>
-                             </SidebarMenuButton>
-                          </Link>
-                       </SidebarMenuItem>
-                        <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
-                           <Link href={`/resident/announcements${condoQueryParam}`} legacyBehavior passHref>
-                              <SidebarMenuButton tooltip="Avisos (Morador)">
-                                 <Bell />
-                                 <span>Avisos Morador</span>
-                              </SidebarMenuButton>
-                           </Link>
-                        </SidebarMenuItem>
-                         <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
-                            <Link href={`/resident/complaints${condoQueryParam}`} legacyBehavior passHref>
-                               <SidebarMenuButton tooltip="Ocorrências (Morador)">
-                                  <MessageSquareQuote />
-                                  <span>Ocorrências Morador</span>
-                               </SidebarMenuButton>
-                            </Link>
-                         </SidebarMenuItem>
-                          <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
-                             <Link href={`/resident/deliveries${condoQueryParam}`} legacyBehavior passHref>
-                               <SidebarMenuButton tooltip="Entregas (Morador)">
-                                 <Package />
-                                 <span>Entregas Morador</span>
-                               </SidebarMenuButton>
-                             </Link>
-                           </SidebarMenuItem>
-                         {/* Add other relevant resident links if needed */}
                   </SidebarMenu>
                </SidebarGroup>
+              */}
              </>
           )}
 

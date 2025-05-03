@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation'; // Use App Router's router
 import { Loader2 } from 'lucide-react'; // Import loader icon
-
-// Basic CPF format validation (XXX.XXX.XXX-XX)
-const cpfRegex = /^\d{3}\.\d{3}\.\d{3}-\d{2}$/;
-// Basic CNPJ format validation (XX.XXX.XXX/XXXX-XX)
-const cnpjRegex = /^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$/;
+import { formatCpf, formatCnpj, isCpfValid, isCnpjValid } from '@/lib/formatters'; // Import formatters/validators
 
 export default function LoginPage() {
     // Login States
@@ -24,21 +20,37 @@ export default function LoginPage() {
     const [sindicoPassword, setSindicoPassword] = useState('');
     const [adminCpf, setAdminCpf] = useState('');
     const [adminPassword, setAdminPassword] = useState('');
-    const [adminEmail, setAdminEmail] = useState(''); // Added for Admin registration
 
     // Registration States
     const [isRegistering, setIsRegistering] = useState(false);
-    const [registerType, setRegisterType] = useState<'resident' | 'sindico' | 'admin'>('resident'); // Track registration type
+    const [registerType, setRegisterType] = useState<'resident' | 'sindico' | 'admin'>('resident');
     const [registerName, setRegisterName] = useState('');
     const [registerEmail, setRegisterEmail] = useState('');
     const [registerCpf, setRegisterCpf] = useState('');
-    const [registerCnpj, setRegisterCnpj] = useState(''); // For Sindico registration
+    const [registerCnpj, setRegisterCnpj] = useState('');
     const [registerPassword, setRegisterPassword] = useState('');
     const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
 
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
+
+    // Input Masking Effect
+    useEffect(() => {
+        setResidentCpf(formatCpf(residentCpf));
+    }, [residentCpf]);
+    useEffect(() => {
+        setSindicoCnpj(formatCnpj(sindicoCnpj));
+    }, [sindicoCnpj]);
+    useEffect(() => {
+        setAdminCpf(formatCpf(adminCpf));
+    }, [adminCpf]);
+    useEffect(() => {
+        setRegisterCpf(formatCpf(registerCpf));
+    }, [registerCpf]);
+     useEffect(() => {
+        setRegisterCnpj(formatCnpj(registerCnpj));
+    }, [registerCnpj]);
 
     const resetRegisterForm = () => {
         setRegisterName('');
@@ -54,24 +66,26 @@ export default function LoginPage() {
         let identifier = ''; // CPF or CNPJ
         let password = '';
         let validationError = '';
+        const rawIdentifier = type === 'resident' ? residentCpf : type === 'sindico' ? sindicoCnpj : adminCpf;
+        const formattedIdentifier = type === 'resident' || type === 'admin' ? formatCpf(rawIdentifier) : formatCnpj(rawIdentifier);
 
         if (type === 'resident') {
-            identifier = residentCpf;
+            identifier = formattedIdentifier;
             password = residentPassword;
-            if (!cpfRegex.test(identifier)) {
-                validationError = 'Formato de CPF inválido (use XXX.XXX.XXX-XX).';
+             if (!isCpfValid(identifier)) {
+                validationError = 'CPF inválido.';
             }
         } else if (type === 'sindico') {
-            identifier = sindicoCnpj;
+            identifier = formattedIdentifier;
             password = sindicoPassword;
-             if (!cnpjRegex.test(identifier)) {
-                 validationError = 'Formato de CNPJ inválido (use XX.XXX.XXX/XXXX-XX).';
+             if (!isCnpjValid(identifier)) {
+                 validationError = 'CNPJ inválido.';
              }
         } else { // admin
-            identifier = adminCpf;
+            identifier = formattedIdentifier;
             password = adminPassword;
-             if (!cpfRegex.test(identifier)) {
-                 validationError = 'Formato de CPF inválido (use XXX.XXX.XXX-XX).';
+             if (!isCpfValid(identifier)) {
+                 validationError = 'CPF inválido.';
              }
         }
 
@@ -84,22 +98,25 @@ export default function LoginPage() {
         console.log(`Attempting ${type} login with identifier: ${identifier}`);
 
         // --- BACKEND NOTE ---
-        // Implement actual authentication logic here using Firebase Auth or similar.
-        // Fetch user details from Firestore based on CPF/CNPJ to get the associated email for signInWithEmailAndPassword.
-        // Verify roles from Firestore/Custom Claims.
+        // 1. Send the *raw* (unformatted) CPF/CNPJ to the backend for lookup if necessary.
+        // 2. Backend fetches user based on raw CPF/CNPJ.
+        // 3. Backend verifies password hash using Firebase Auth (signInWithEmailAndPassword using fetched email).
+        // 4. Backend verifies role.
+        // 5. Use prepared statements.
         await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
 
-        // --- SIMULATED AUTH - UPDATED WITH TEST CREDENTIALS ---
+        // --- SIMULATED AUTH - USE PROVIDED TEST CREDENTIALS ---
         let loginSuccess = false;
         let redirectPath = '/';
+        const cleanIdentifier = identifier.replace(/\D/g, ''); // Send clean ID for comparison
 
-        if (type === 'resident' && identifier === '632.099.143-70' && password === 'senha098') {
+        if (type === 'resident' && cleanIdentifier === '63209914370' && password === 'senha098') {
             loginSuccess = true;
             redirectPath = '/resident/dashboard';
-        } else if (type === 'sindico' && identifier === '11.222.333/0001-44' && password === 'senha890') {
+        } else if (type === 'sindico' && cleanIdentifier === '11222333000144' && password === 'senha890') {
             loginSuccess = true;
             redirectPath = '/sindico/dashboard'; // Redirect Sindico
-        } else if (type === 'admin' && identifier === '609.367.243-31' && password === 'senha123') {
+        } else if (type === 'admin' && cleanIdentifier === '60936724331' && password === 'senha123') {
             loginSuccess = true;
             redirectPath = '/admin/dashboard';
         }
@@ -123,29 +140,34 @@ export default function LoginPage() {
      const handleRegister = async () => {
         setIsLoading(true);
         let validationError = '';
+        const formattedCpf = formatCpf(registerCpf);
+        const formattedCnpj = formatCnpj(registerCnpj);
 
         // Common Validations
-        if (!registerName.trim() || !registerEmail.trim() || !registerCpf.trim() || !registerPassword || !registerConfirmPassword) {
+        if (!registerName.trim() || !registerEmail.trim() || !formattedCpf || !registerPassword || !registerConfirmPassword) {
             validationError = "Preencha todos os campos obrigatórios (*).";
-        } else if (!cpfRegex.test(registerCpf)) {
-            validationError = "Formato de CPF inválido (use XXX.XXX.XXX-XX).";
+         } else if (!isCpfValid(formattedCpf)) {
+            validationError = "CPF inválido.";
         } else if (!/\S+@\S+\.\S+/.test(registerEmail)) {
             validationError = "Formato de email inválido.";
         } else if (registerPassword !== registerConfirmPassword) {
              validationError = "As senhas não coincidem.";
         } else {
-             // Password Strength Check (Example: Minimum 8 chars, 1 number, 1 uppercase)
              const passwordStrengthRegex = /^(?=.*[A-Z])(?=.*\d).{8,}$/;
              if (!passwordStrengthRegex.test(registerPassword)) {
-                 validationError = "A senha deve ter no mínimo 8 caracteres, incluindo uma letra maiúscula e um número.";
+                 validationError = "Senha fraca: Mín. 8 caracteres, 1 maiúscula, 1 número.";
              }
         }
 
         // Type-Specific Validations
         if (!validationError) {
-             if (registerType === 'sindico' && !cnpjRegex.test(registerCnpj)) {
-                 validationError = 'Formato de CNPJ inválido (use XX.XXX.XXX/XXXX-XX).';
-             } else if (registerType === 'admin' && !registerEmail.endsWith('@digicondo.com')) { // Example corporate email check
+             if (registerType === 'sindico') {
+                 if (!formattedCnpj) {
+                     validationError = 'CNPJ do condomínio é obrigatório.';
+                 } else if (!isCnpjValid(formattedCnpj)) {
+                    validationError = 'CNPJ inválido.';
+                 }
+              } else if (registerType === 'admin' && !registerEmail.endsWith('@digicondo.com')) { // Example corporate email check
                  validationError = 'Email corporativo inválido para administrador.';
              }
         }
@@ -157,56 +179,51 @@ export default function LoginPage() {
              return;
         }
 
-        console.log(`Attempting ${registerType} registration for: ${registerName} (CPF: ${registerCpf})`);
+         const cleanCpf = formattedCpf.replace(/\D/g, '');
+         const cleanCnpj = formattedCnpj.replace(/\D/g, '');
+
+        console.log(`Attempting ${registerType} registration for: ${registerName} (CPF: ${cleanCpf})`);
 
         // --- BACKEND NOTE ---
-        // Implement actual registration logic using Firebase Auth (createUserWithEmailAndPassword)
-        // and Firestore (to store additional details like CPF, CNPJ, Name, Role, Condo link).
-        // - Ensure CPF uniqueness within the system or condo.
-        // - Ensure CNPJ exists and is managed if registering a Sindico.
-        // - Verify corporate email domain for Admin.
-        // - Securely hash passwords.
-        // - Send verification email if needed.
-        // - Use prepared statements/secure practices for database interactions.
+        // 1. Send *raw* identifiers (cleanCpf, cleanCnpj) to backend.
+        // 2. Backend validates uniqueness, domain rules, etc.
+        // 3. Backend uses Firebase Auth (createUserWithEmailAndPassword).
+        // 4. Backend stores additional info (raw CPF/CNPJ, Name, Role) in Firestore, linked by Auth UID.
+        // 5. Use prepared statements for any direct DB interaction.
         await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
 
-         // --- SIMULATED REGISTRATION ---
          const registrationSuccess = true; // Simulate success
-         // --- END SIMULATED REGISTRATION ---
-
 
         setIsLoading(false);
 
          if (registrationSuccess) {
             toast({ title: "Registro bem-sucedido!", description: "Sua conta foi criada. Faça o login." });
              resetRegisterForm();
-             setIsRegistering(false); // Switch back to login view
-             // Pre-fill login fields based on registration type
-             if (registerType === 'resident') setResidentCpf(registerCpf);
-             if (registerType === 'sindico') setSindicoCnpj(registerCnpj);
-             if (registerType === 'admin') setAdminCpf(registerCpf);
+             setIsRegistering(false);
+             // Pre-fill login fields
+             if (registerType === 'resident') setResidentCpf(formattedCpf);
+             if (registerType === 'sindico') setSindicoCnpj(formattedCnpj);
+             if (registerType === 'admin') setAdminCpf(formattedCpf);
          } else {
              toast({
                  title: "Falha no Registro",
-                 description: "Não foi possível criar a conta. Verifique os dados ou contate o suporte.", // Add more specific errors from backend
+                 description: "Não foi possível criar a conta. Verifique os dados ou contate o suporte.",
                  variant: "destructive",
              });
          }
     };
 
      const handleTabChange = (value: string) => {
-         setIsRegistering(false); // Always switch back to login view when changing tabs
+         setIsRegistering(false);
          resetRegisterForm();
-         setRegisterType(value as 'resident' | 'sindico' | 'admin'); // Update registration type contextually
+         setRegisterType(value as 'resident' | 'sindico' | 'admin');
      };
 
 
     return (
-         // Center content vertically and horizontally
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
             <Tabs defaultValue="resident" className="w-full max-w-md" onValueChange={handleTabChange}>
                 <div className="text-center mb-6">
-                     {/* Placeholder for Logo */}
                     <div className="w-16 h-16 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center text-primary-foreground font-bold text-xl">
                         DC
                     </div>
@@ -238,8 +255,16 @@ export default function LoginPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="register-cpf-res">CPF*</Label>
-                                        <Input id="register-cpf-res" placeholder="000.000.000-00" value={registerCpf} onChange={(e) => setRegisterCpf(e.target.value)} disabled={isLoading} required />
-                                        {registerCpf && !cpfRegex.test(registerCpf) && <p className="text-xs text-destructive">Formato inválido.</p>}
+                                        <Input
+                                             id="register-cpf-res"
+                                             placeholder="000.000.000-00"
+                                             value={registerCpf} // Display formatted value
+                                             onChange={(e) => setRegisterCpf(e.target.value)} // Update raw value, useEffect formats
+                                             maxLength={14} // CPF length with formatting
+                                             disabled={isLoading}
+                                             required
+                                          />
+                                         {registerCpf && registerCpf.length === 14 && !isCpfValid(registerCpf) && <p className="text-xs text-destructive">CPF inválido.</p>}
                                     </div>
                                      <div className="space-y-1">
                                         <Label htmlFor="register-email-res">Email Pessoal*</Label>
@@ -260,7 +285,15 @@ export default function LoginPage() {
                                     {/* Login Form (Resident) */}
                                     <div className="space-y-1">
                                         <Label htmlFor="resident-cpf">CPF</Label>
-                                        <Input id="resident-cpf" placeholder="000.000.000-00" value={residentCpf} onChange={(e) => setResidentCpf(e.target.value)} disabled={isLoading} />
+                                         <Input
+                                             id="resident-cpf"
+                                             placeholder="000.000.000-00"
+                                             value={residentCpf} // Display formatted value
+                                             onChange={(e) => setResidentCpf(e.target.value)} // Update raw value, useEffect formats
+                                             maxLength={14} // CPF length with formatting
+                                             disabled={isLoading}
+                                         />
+                                          {residentCpf && residentCpf.length === 14 && !isCpfValid(residentCpf) && <p className="text-xs text-destructive">CPF inválido.</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="resident-password">Senha</Label>
@@ -307,13 +340,29 @@ export default function LoginPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="register-cpf-sin">CPF (Síndico)*</Label>
-                                        <Input id="register-cpf-sin" placeholder="000.000.000-00" value={registerCpf} onChange={(e) => setRegisterCpf(e.target.value)} disabled={isLoading} required />
-                                        {registerCpf && !cpfRegex.test(registerCpf) && <p className="text-xs text-destructive">Formato inválido.</p>}
+                                        <Input
+                                             id="register-cpf-sin"
+                                             placeholder="000.000.000-00"
+                                             value={registerCpf}
+                                             onChange={(e) => setRegisterCpf(e.target.value)}
+                                             maxLength={14}
+                                             disabled={isLoading}
+                                             required
+                                         />
+                                         {registerCpf && registerCpf.length === 14 && !isCpfValid(registerCpf) && <p className="text-xs text-destructive">CPF inválido.</p>}
                                     </div>
                                      <div className="space-y-1">
                                         <Label htmlFor="register-cnpj-sin">CNPJ do Condomínio*</Label>
-                                        <Input id="register-cnpj-sin" placeholder="00.000.000/0000-00" value={registerCnpj} onChange={(e) => setRegisterCnpj(e.target.value)} disabled={isLoading} required />
-                                         {registerCnpj && !cnpjRegex.test(registerCnpj) && <p className="text-xs text-destructive">Formato inválido.</p>}
+                                         <Input
+                                             id="register-cnpj-sin"
+                                             placeholder="00.000.000/0000-00"
+                                             value={registerCnpj}
+                                             onChange={(e) => setRegisterCnpj(e.target.value)}
+                                             maxLength={18} // CNPJ length with formatting
+                                             disabled={isLoading}
+                                             required
+                                          />
+                                         {registerCnpj && registerCnpj.length === 18 && !isCnpjValid(registerCnpj) && <p className="text-xs text-destructive">CNPJ inválido.</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="register-email-sin">Email de Contato*</Label>
@@ -334,7 +383,15 @@ export default function LoginPage() {
                                      {/* Login Form (Sindico) */}
                                     <div className="space-y-1">
                                         <Label htmlFor="sindico-cnpj">CNPJ do Condomínio</Label>
-                                        <Input id="sindico-cnpj" placeholder="00.000.000/0000-00" value={sindicoCnpj} onChange={(e) => setSindicoCnpj(e.target.value)} disabled={isLoading} />
+                                         <Input
+                                             id="sindico-cnpj"
+                                             placeholder="00.000.000/0000-00"
+                                             value={sindicoCnpj}
+                                             onChange={(e) => setSindicoCnpj(e.target.value)}
+                                             maxLength={18}
+                                             disabled={isLoading}
+                                          />
+                                         {sindicoCnpj && sindicoCnpj.length === 18 && !isCnpjValid(sindicoCnpj) && <p className="text-xs text-destructive">CNPJ inválido.</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="sindico-password">Senha Pessoal</Label>
@@ -355,7 +412,6 @@ export default function LoginPage() {
                              ) : (
                                 <>
                                      <Button variant="link" className="text-sm p-0 h-auto" disabled={isLoading}>Esqueceu sua senha?</Button>
-                                     {/* Sindico registration might be restricted */}
                                      <Button variant="link" className="text-sm p-0 h-auto" onClick={() => { setIsRegistering(true); }} disabled={isLoading}>
                                          Registrar novo Síndico/Condomínio
                                      </Button>
@@ -384,8 +440,16 @@ export default function LoginPage() {
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="register-cpf-adm">CPF (Admin)*</Label>
-                                        <Input id="register-cpf-adm" placeholder="000.000.000-00" value={registerCpf} onChange={(e) => setRegisterCpf(e.target.value)} disabled={isLoading} required />
-                                        {registerCpf && !cpfRegex.test(registerCpf) && <p className="text-xs text-destructive">Formato inválido.</p>}
+                                         <Input
+                                             id="register-cpf-adm"
+                                             placeholder="000.000.000-00"
+                                             value={registerCpf}
+                                             onChange={(e) => setRegisterCpf(e.target.value)}
+                                             maxLength={14}
+                                             disabled={isLoading}
+                                             required
+                                          />
+                                        {registerCpf && registerCpf.length === 14 && !isCpfValid(registerCpf) && <p className="text-xs text-destructive">CPF inválido.</p>}
                                     </div>
                                      <div className="space-y-1">
                                         <Label htmlFor="register-email-adm">Email Corporativo* (@digicondo.com)</Label>
@@ -406,7 +470,15 @@ export default function LoginPage() {
                                     {/* Login Form (Admin) */}
                                     <div className="space-y-1">
                                         <Label htmlFor="admin-cpf">CPF</Label>
-                                        <Input id="admin-cpf" placeholder="000.000.000-00" value={adminCpf} onChange={(e) => setAdminCpf(e.target.value)} disabled={isLoading} />
+                                         <Input
+                                             id="admin-cpf"
+                                             placeholder="000.000.000-00"
+                                             value={adminCpf}
+                                             onChange={(e) => setAdminCpf(e.target.value)}
+                                             maxLength={14}
+                                             disabled={isLoading}
+                                         />
+                                         {adminCpf && adminCpf.length === 14 && !isCpfValid(adminCpf) && <p className="text-xs text-destructive">CPF inválido.</p>}
                                     </div>
                                     <div className="space-y-1">
                                         <Label htmlFor="admin-password">Senha</Label>
@@ -427,7 +499,6 @@ export default function LoginPage() {
                              ) : (
                                 <>
                                      <Button variant="link" className="text-sm p-0 h-auto" disabled={isLoading}>Esqueceu sua senha?</Button>
-                                      {/* Admin registration might be restricted */}
                                      <Button variant="link" className="text-sm p-0 h-auto" onClick={() => { setIsRegistering(true); }} disabled={isLoading}>
                                          Registrar novo Admin
                                      </Button>
