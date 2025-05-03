@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import {
-  LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, Ticket, CalendarCheck, Package // Added Package for deliveries
+  LayoutDashboard, Users, Building, Bell, FileText, Settings, LogOut, MessageSquareQuote, Ticket, CalendarCheck, Package, DollarSign // Added DollarSign
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
@@ -134,14 +134,7 @@ export default function AdminLayout({
                           </SidebarMenuButton>
                       </Link>
                   </SidebarMenuItem>
-                   <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
-                       <Link href="/admin/settings/users" legacyBehavior passHref>
-                          <SidebarMenuButton tooltip="Usuários Admin">
-                              <Users />
-                              <span>Usuários Admin</span>
-                          </SidebarMenuButton>
-                      </Link>
-                   </SidebarMenuItem>
+                   {/* Removed Admin Users Link */}
               </SidebarMenu>
           </SidebarGroup>
 
@@ -158,7 +151,7 @@ export default function AdminLayout({
                </Link>
             </SidebarMenuItem>
             <SidebarMenuItem className="transition-colors duration-200 hover:bg-sidebar-accent rounded-md">
-               <Link href="/login" passHref>
+               <Link href="/login/resident" passHref> {/* Default logout to resident login */}
                 <SidebarMenuButton tooltip="Sair">
                   <LogOut />
                   <span>Sair</span>

@@ -4,7 +4,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { DollarSign, Users, Bell, Mail } from 'lucide-react'; // Example icons
+import { DollarSign, Bell } from 'lucide-react'; // Example icons, removed Users
 
 export default function AdminSettingsPage() {
 
@@ -30,19 +30,7 @@ export default function AdminSettingsPage() {
                     </CardContent>
                 </Card>
 
-                 <Card className="hover:shadow-md transition-shadow">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                           <Users className="h-5 w-5 text-primary"/> Usuários Admin
-                        </CardTitle>
-                        <CardDescription>Gerencie os usuários com acesso administrativo.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Button variant="outline" asChild>
-                           <Link href="/admin/settings/users">Gerenciar Usuários</Link>
-                        </Button>
-                    </CardContent>
-                </Card>
+                 {/* Removed Admin Users Card */}
 
                  {/* Placeholder for Notification Settings */}
                  <Card className="hover:shadow-md transition-shadow">

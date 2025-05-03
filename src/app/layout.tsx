@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'DigiCondo',
-  description: 'Gestão de condomínios simplificada - Gerado por Firebase Studio',
+  title: 'DigiSin', // Updated title
+  description: 'Gestão inteligente e conectada, na palma da sua mão.', // Added slogan
 };
 
 export default function RootLayout({

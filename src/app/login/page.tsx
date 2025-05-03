@@ -8,11 +8,28 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from 'next/navigation'; // Use App Router's router
+import { useRouter, usePathname } from 'next/navigation'; // Use App Router's router
 import { Loader2 } from 'lucide-react'; // Import loader icon
 import { formatCpf, formatCnpj, isCpfValid, isCnpjValid } from '@/lib/formatters'; // Import formatters/validators
 
-export default function LoginPage() {
+type LoginRole = 'resident' | 'sindico' | 'admin';
+
+// TODO: Replace with actual function to fetch condo employees managed by Sindico
+const fetchCondoEmployees = async (cpf: string): Promise<{ passwordHash: string } | null> => {
+    // Simulate checking a list of employees added by the Sindico
+    // This function should check if the CPF belongs to an active employee (e.g., supervisor)
+    // associated with *any* condo managed by *any* sindico (or check based on a lookup).
+    // For simulation, allow the test admin CPF
+     if (cpf === '609.367.243-31') {
+         // Simulate returning the hashed password for the test admin/supervisor
+         // In a real scenario, fetch the hash from the database record created via sindico/employees
+         // Hashing 'senha123' (replace with actual hash check)
+         return { passwordHash: '$2b$...' }; // Placeholder for hashed password
+     }
+    return null;
+};
+
+export default function LoginPage({ defaultTab = 'resident' }: { defaultTab?: LoginRole }) {
     // Login States
     const [residentCpf, setResidentCpf] = useState('');
     const [residentPassword, setResidentPassword] = useState('');
@@ -23,7 +40,7 @@ export default function LoginPage() {
 
     // Registration States
     const [isRegistering, setIsRegistering] = useState(false);
-    const [registerType, setRegisterType] = useState<'resident' | 'sindico' | 'admin'>('resident');
+    const [registerType, setRegisterType] = useState<LoginRole>(defaultTab);
     const [registerName, setRegisterName] = useState('');
     const [registerEmail, setRegisterEmail] = useState('');
     const [registerCpf, setRegisterCpf] = useState('');
@@ -32,8 +49,25 @@ export default function LoginPage() {
     const [registerConfirmPassword, setRegisterConfirmPassword] = useState('');
 
     const [isLoading, setIsLoading] = useState(false);
+    const [currentTab, setCurrentTab] = useState<LoginRole>(defaultTab);
     const { toast } = useToast();
     const router = useRouter();
+    const pathname = usePathname(); // Get current path
+
+     // Determine default tab based on path if prop not provided or if path changes
+     useEffect(() => {
+         const pathSegments = pathname.split('/');
+         const lastSegment = pathSegments[pathSegments.length - 1];
+         const validTabs: LoginRole[] = ['resident', 'sindico', 'admin'];
+         if (validTabs.includes(lastSegment as LoginRole)) {
+             setCurrentTab(lastSegment as LoginRole);
+             setRegisterType(lastSegment as LoginRole); // Sync register type on path change
+         } else {
+             setCurrentTab('resident'); // Default if path doesn't match
+             setRegisterType('resident');
+         }
+     }, [pathname]);
+
 
     // Input Masking Effect
     useEffect(() => {
@@ -61,7 +95,7 @@ export default function LoginPage() {
         setRegisterConfirmPassword('');
     }
 
-    const handleLogin = async (type: 'resident' | 'sindico' | 'admin') => {
+    const handleLogin = async (type: LoginRole) => {
         setIsLoading(true);
         let identifier = ''; // CPF or CNPJ
         let password = '';
@@ -98,11 +132,13 @@ export default function LoginPage() {
         console.log(`Attempting ${type} login with identifier: ${identifier}`);
 
         // --- BACKEND NOTE ---
-        // 1. Send the *raw* (unformatted) CPF/CNPJ to the backend for lookup if necessary.
-        // 2. Backend fetches user based on raw CPF/CNPJ.
-        // 3. Backend verifies password hash using Firebase Auth (signInWithEmailAndPassword using fetched email).
-        // 4. Backend verifies role.
-        // 5. Use prepared statements.
+        // 1. Send the *raw* (unformatted) CPF/CNPJ to the backend.
+        // 2. Backend determines user type (Resident, Sindico, Admin/Supervisor) based on identifier format and potentially a lookup.
+        // 3. Fetch user data (including hashed password and role) based on raw CPF/CNPJ/Email.
+        // 4. If Admin login: Check both DigiSin admins *and* condo employees (supervisors, etc.) added via Sindico panel.
+        // 5. Verify password hash using Firebase Auth (signInWithEmailAndPassword using fetched email) or a secure hashing library (bcrypt).
+        // 6. Verify role matches the login tab.
+        // 7. Use prepared statements.
         await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
 
         // --- SIMULATED AUTH - USE PROVIDED TEST CREDENTIALS ---
@@ -115,10 +151,17 @@ export default function LoginPage() {
             redirectPath = '/resident/dashboard';
         } else if (type === 'sindico' && cleanIdentifier === '11222333000144' && password === 'senha890') {
             loginSuccess = true;
-            redirectPath = '/sindico/dashboard'; // Redirect Sindico
+             // Redirect Sindico to dashboard, passing the condoId identified by CNPJ
+             const condoId = 1; // TODO: Fetch actual condoId associated with the CNPJ from backend
+            redirectPath = `/sindico/dashboard?condoId=${condoId}`;
         } else if (type === 'admin' && cleanIdentifier === '60936724331' && password === 'senha123') {
+            // This could be a DigiSin admin OR a condo employee (Supervisor)
+            // TODO: Backend should differentiate and set appropriate session/token
+            // For now, assume it's a DigiSin admin with global access
+             // const employee = await fetchCondoEmployees(formattedIdentifier);
+             // if (employee) { /* login success as supervisor */ }
             loginSuccess = true;
-            redirectPath = '/admin/dashboard';
+            redirectPath = '/admin/dashboard'; // Redirect general admin
         }
         // --- END SIMULATED AUTH ---
 
@@ -167,7 +210,7 @@ export default function LoginPage() {
                  } else if (!isCnpjValid(formattedCnpj)) {
                     validationError = 'CNPJ inválido.';
                  }
-              } else if (registerType === 'admin' && !registerEmail.endsWith('@digicondo.com')) { // Example corporate email check
+              } else if (registerType === 'admin' && !registerEmail.endsWith('@digisin.com.br')) { // Example corporate email check - ADJUST DOMAIN
                  validationError = 'Email corporativo inválido para administrador.';
              }
         }
@@ -186,10 +229,11 @@ export default function LoginPage() {
 
         // --- BACKEND NOTE ---
         // 1. Send *raw* identifiers (cleanCpf, cleanCnpj) to backend.
-        // 2. Backend validates uniqueness, domain rules, etc.
-        // 3. Backend uses Firebase Auth (createUserWithEmailAndPassword).
-        // 4. Backend stores additional info (raw CPF/CNPJ, Name, Role) in Firestore, linked by Auth UID.
-        // 5. Use prepared statements for any direct DB interaction.
+        // 2. Backend validates uniqueness, domain rules, condo existence (for sindico).
+        // 3. Backend uses Firebase Auth (createUserWithEmailAndPassword) or similar auth provider.
+        // 4. Backend stores additional info (raw CPF/CNPJ, Name, Role, condo link for sindico) in Firestore/DB, linked by Auth UID.
+        // 5. Sindico registration requires admin approval? Define workflow. Admin registration might need approval too.
+        // 6. Use prepared statements for any direct DB interaction.
         await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate API call
 
          const registrationSuccess = true; // Simulate success
@@ -213,22 +257,26 @@ export default function LoginPage() {
          }
     };
 
-     const handleTabChange = (value: string) => {
+     const handleTabChange = (value: LoginRole) => {
          setIsRegistering(false);
          resetRegisterForm();
-         setRegisterType(value as 'resident' | 'sindico' | 'admin');
+         setRegisterType(value);
+         setCurrentTab(value);
+         // Update URL without full page reload
+         router.push(`/login/${value}`, { scroll: false });
      };
 
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-background p-4">
-            <Tabs defaultValue="resident" className="w-full max-w-md" onValueChange={handleTabChange}>
+            <Tabs value={currentTab} className="w-full max-w-md" onValueChange={(value) => handleTabChange(value as LoginRole)}>
                 <div className="text-center mb-6">
-                    <div className="w-16 h-16 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center text-primary-foreground font-bold text-xl">
-                        DC
-                    </div>
-                    <h1 className="text-3xl font-bold text-foreground">DigiCondo</h1>
-                    <p className="text-muted-foreground">Acesse ou crie sua conta</p>
+                    {/* TODO: Add actual logo */}
+                     <div className="w-20 h-20 bg-primary rounded-full mx-auto mb-4 flex items-center justify-center text-primary-foreground font-bold text-3xl shadow-md">
+                       DS
+                     </div>
+                    <h1 className="text-3xl font-bold text-foreground">DigiSin</h1>
+                    <p className="text-muted-foreground">Gestão inteligente e conectada, na palma da sua mão.</p>
                 </div>
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="resident">Morador</TabsTrigger>
@@ -425,9 +473,9 @@ export default function LoginPage() {
                  <TabsContent value="admin">
                      <Card>
                         <CardHeader>
-                            <CardTitle>{isRegistering ? 'Registrar Acesso Admin' : 'Acesso Admin (DigiCondo)'}</CardTitle>
+                            <CardTitle>{isRegistering ? 'Registrar Acesso Admin' : 'Acesso Admin (DigiSin)'}</CardTitle>
                              <CardDescription>
-                                {isRegistering ? 'Registre-se com seu CPF e email corporativo.' : 'Login para administradores da plataforma.'}
+                                {isRegistering ? 'Registre-se com seu CPF e email corporativo.' : 'Login para administradores e supervisores.'}
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -452,7 +500,7 @@ export default function LoginPage() {
                                         {registerCpf && registerCpf.length === 14 && !isCpfValid(registerCpf) && <p className="text-xs text-destructive">CPF inválido.</p>}
                                     </div>
                                      <div className="space-y-1">
-                                        <Label htmlFor="register-email-adm">Email Corporativo* (@digicondo.com)</Label>
+                                        <Label htmlFor="register-email-adm">Email Corporativo* (@digisin.com.br)</Label> {/* Adjusted Domain */}
                                         <Input id="register-email-adm" type="email" value={registerEmail} onChange={(e) => setRegisterEmail(e.target.value)} disabled={isLoading} required />
                                     </div>
                                      <div className="space-y-1">

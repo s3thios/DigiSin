@@ -1,6 +1,6 @@
 
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Users, Building, Bell, MessageSquareQuote, CalendarCheck, Package } from 'lucide-react'; // Added Package icon
+import { Users, Building, Bell, MessageSquareQuote, CalendarCheck, Package, DollarSign } from 'lucide-react'; // Added Package icon, DollarSign
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -126,9 +126,7 @@ export default function AdminDashboardPage() {
              <Button variant="outline" asChild>
                 <Link href="/admin/settings/fees">Ajustar Taxas Globais</Link>
             </Button>
-             <Button variant="outline" asChild>
-                <Link href="/admin/settings/users">Gerenciar Usuários</Link>
-            </Button>
+             {/* Removed Gerenciar Usuários Link */}
         </CardContent>
       </Card>
 
